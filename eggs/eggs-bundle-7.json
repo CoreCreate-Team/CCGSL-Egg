@@ -1,0 +1,787 @@
+{"files":{"egg-vanillacord.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/186/download/egg-vanillacord.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:04+00:00",
+    "name": "VanillaCord",
+    "author": "support@pterodactyl.io",
+    "description": "我的世界是一款关于放置方块和展开冒险的游戏。探索随机生成的世界，从最简单的房屋到最宏伟的城堡，建造令人惊叹的建筑。在创造模式中利用无限资源尽情建造，或在生存模式中深入挖掘，制作武器和盔甲抵御危险的生物。你可以独自游玩，也可以与朋友一起。\n\nVanillaCord 增加了对 BungeeCord 的 ip_forward 设置的支持。",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "Java 8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8",
+        "Java 11": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11",
+        "Java 16": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16",
+        "Java 17": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17",
+        "Java 21": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_21",
+        "Java 25": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_25"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-ip\": \"0.0.0.0\",\r\n            \"enable-query\": \"true\",\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"query.port\": \"{{server.build.default.port}}\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \")! For help, type \",\r\n    \"userInteraction\": [\r\n        \"Go to eula.txt for more info.\"\r\n    ]\r\n}",
+        "stop": "stop"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:java_8",
+            "entrypoint": "ash",
+            "script": "#!/bin/ash\r\n\r\napk --no-cache --update add curl jq\r\n\r\ncd /mnt/server\r\n\r\necho $VANILLA_VERSION\r\n\r\nLATEST_VERSION=`curl https://launchermeta.mojang.com/mc/game/version_manifest.json | jq -r '.latest.release'`\r\n\r\nif { [ -z \"$VANILLA_VERSION\" ] || [ \"$VANILLA_VERSION\" == \"latest\" ]; } then\r\n  INSTALLING_VERSION=$LATEST_VERSION\r\nelse\r\n  INSTALLING_VERSION=$VANILLA_VERSION\r\nfi\r\n\r\nMAJOR_VERSION=$(echo $INSTALLING_VERSION | sed -En 's/^([0-9]*)\\.[0-9]*\\.[0-9]*$/\\1/p')\r\nMINOR_VERSION=$(echo $INSTALLING_VERSION | sed -En 's/^[0-9]*\\.([0-9]*)\\.[0-9]*$/\\1/p')\r\nPATCH_VERSION=$(echo $INSTALLING_VERSION | sed -En 's/^[0-9]*\\.[0-9]*\\.([0-9]*)$/\\1/p')\r\n\r\nVANILLACORD_URL=https://src.me1312.net/jenkins/job/VanillaCord/job/1.12/lastSuccessfulBuild/artifact/artifacts/VanillaCord.jar\r\nif [ $MAJOR_VERSION -eq 1 ] && [ $MINOR_VERSION -lt 12 ]; then\r\n  VANILLACORD_URL=https://src.me1312.net/jenkins/job/VanillaCord/job/1.7.10/lastSuccessfulBuild/artifact/artifacts/VanillaCord.jar\r\nfi\r\n\r\nif { [ $MAJOR_VERSION -eq 1 ] && [ $MINOR_VERSION -eq 7 ] && [ $PATCH_VERSION -lt 10 ]; } || { [ $MAJOR_VERSION -eq 1 ] && [ $MINOR_VERSION -lt 7 ]; } then\r\n  echo \"VanillaCord is only supported on Minecraft 1.7.10 or higher! You cannot use it with $INSTALLING_VERSION.\"\r\n  exit 1\r\nfi\r\n\r\ncurl -o vanillacord.jar $VANILLACORD_URL\r\njava -jar vanillacord.jar $INSTALLING_VERSION\r\n\r\nrm -f vanillacord.jar\r\nrm -rf in\r\nmv out/*.jar $SERVER_JARFILE\r\nrm -rf out"
+        }
+    },
+    "variables": [
+        {
+            "name": "服务器Jar文件",
+            "description": "用于运行服务器的服务器jar文件名。",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "server.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:/^([\\w\\d._-]+)(\\.jar)$/",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器版本",
+            "description": "要安装的Minecraft原版版本。使用\"latest\"安装最新版本。",
+            "env_variable": "VANILLA_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|between:3,15",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/186"
+},"egg-velocity.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/192/download/egg-velocity.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:06+00:00",
+    "name": "Velocity",
+    "author": "parker@parkervcp.com",
+    "description": "Velocity 是一款拥有无与伦比的服务器支持、可扩展性和灵活性的 Minecraft 服务器代理。",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "Java 8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8",
+        "Java 11": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11",
+        "Java 16": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16",
+        "Java 17": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17",
+        "Java 21": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_21",
+        "Java 25": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_25"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -XX:+UseG1GC -XX:G1HeapRegionSize=4M -XX:+UnlockExperimentalVMOptions -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -XX:MaxInlineLevel=15 -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{\r\n    \"velocity.toml\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"bind = \": \"bind = \\\"0.0.0.0:{{server.build.default.port}}\\\"\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Done (\"\r\n}",
+        "stop": "end"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:alpine",
+            "entrypoint": "ash",
+            "script": "#!/bin/ash\r\n# Velocity Proxy Installation Script\r\n#\r\n# Server Files: /mnt/server\r\nPROJECT=velocity\r\n\r\nif [[ -z ${VELOCITY_VERSION} ]] || [[ ${VELOCITY_VERSION} == \"latest\" ]]; then\r\n    VELOCITY_VERSION=\"latest\"\r\nfi\r\n\r\nif [[ -n \"${DOWNLOAD_LINK}\" ]]; then\r\n    echo -e \"Using supplied download url: ${DOWNLOAD_LINK}\"\r\n    DOWNLOAD_URL=$(eval echo $(echo ${DL_PATH} | sed -e 's/{{/${/g' -e 's/}}/}/g'))\r\nelse\r\n    VER_EXISTS=$(curl -s https://api.papermc.io/v2/projects/${PROJECT} | jq -r --arg VERSION $VELOCITY_VERSION '.versions[] | contains($VERSION)' | grep true)\r\n    LATEST_VERSION=$(curl -s https://api.papermc.io/v2/projects/${PROJECT} | jq -r '.versions' | jq -r '.[-1]')\r\n\r\nif [[ \"${VER_EXISTS}\" == \"true\" ]]; then\r\n    echo -e \"Version is valid. Using version ${VELOCITY_VERSION}\"\r\nelse\r\n    echo -e \"Using the latest ${PROJECT} version\"\r\n    VELOCITY_VERSION=${LATEST_VERSION}\r\nfi\r\n\r\nBUILD_EXISTS=$(curl -s https://api.papermc.io/v2/projects/${PROJECT}/versions/${VELOCITY_VERSION} | jq -r --arg BUILD ${BUILD_NUMBER} '.builds[] | tostring | contains($BUILD)' | grep true)\r\nLATEST_BUILD=$(curl -s https://api.papermc.io/v2/projects/${PROJECT}/versions/${VELOCITY_VERSION} | jq -r '.builds' | jq -r '.[-1]')\r\n\r\nif [[ \"${BUILD_EXISTS}\" == \"true\" ]]; then\r\n    echo -e \"Build is valid for version ${VELOCITY_VERSION}. Using build ${BUILD_NUMBER}\"\r\nelse\r\n    echo -e \"Using the latest ${PROJECT} build for version ${VELOCITY_VERSION}\"\r\n    BUILD_NUMBER=${LATEST_BUILD}\r\nfi\r\n\r\nJAR_NAME=${PROJECT}-${VELOCITY_VERSION}-${BUILD_NUMBER}.jar\r\necho \"Version being downloaded\"\r\necho -e \"Velocity Version: ${VELOCITY_VERSION}\"\r\necho -e \"Build: ${BUILD_NUMBER}\"\r\necho -e \"JAR Name of Build: ${JAR_NAME}\"\r\nDOWNLOAD_URL=https://api.papermc.io/v2/projects/${PROJECT}/versions/${VELOCITY_VERSION}/builds/${BUILD_NUMBER}/downloads/${JAR_NAME}\r\n\r\nfi\r\ncd /mnt/server\r\necho -e \"Running curl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\"\r\n\r\nif [[ -f ${SERVER_JARFILE} ]]; then\r\nmv ${SERVER_JARFILE} ${SERVER_JARFILE}.old\r\nfi\r\n\r\ncurl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\r\n\r\nif [[ -f velocity.toml ]]; then\r\n    echo -e \"velocity config file exists\"\r\nelse\r\n    echo -e \"downloading velocity config file.\"\r\n    curl https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/minecraft/proxy/java/velocity/velocity.toml -o velocity.toml\r\nfi\r\n\r\nif [[ -f forwarding.secret ]]; then\r\n    echo -e \"velocity forwarding secret file already exists\"\r\nelse\r\n    echo -e \"creating forwarding secret file\"\r\n    touch forwarding.secret\r\n    date +%s | sha256sum | base64 | head -c 12 > forwarding.secret\r\nfi\r\n\r\necho -e \"install complete\""
+        }
+    },
+    "variables": [
+        {
+            "name": "Velocity 版本",
+            "description": "要下载的 Velocity 代理版本。\n\n设置为 'latest' 以下载最新的稳定构建版本。",
+            "env_variable": "VELOCITY_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器Jar文件",
+            "description": "服务器Jar文件，默认设置为'velocity.jar'。  \n如果您希望使用不同的Jar文件名，请在此处进行修改。",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "velocity.jar",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|max:32|regex:/^([\\w\\d._-]+)(\\.jar)$/",
+            "field_type": "text"
+        },
+        {
+            "name": "下载路径",
+            "description": "用于下载server.jar的URL，而非安装脚本中的那些。此URL对用户不可见。",
+            "env_variable": "DL_PATH",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "构建编号",
+            "description": "Velocity 版本的构建编号。\n\n保持为 latest 以始终获取最新版本。无效版本将默认使用 latest。",
+            "env_variable": "BUILD_NUMBER",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/192"
+},"egg-veloren.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/256/download/egg-veloren.json"
+    },
+    "exported_at": "2026-08-23T08:16:13+00:00",
+    "name": "Veloren",
+    "author": "parker@parkervcp.com",
+    "description": "Veloren 是一款用 Rust 编写的多人体素 RPG 游戏。它的灵感来源于 Cube World、Legend of Zelda: Breath of the Wild、Dwarf Fortress 和 Minecraft 等游戏。",
+    "features": null,
+    "docker_images": {
+        "Ubuntu": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:ubuntu"
+    },
+    "file_denylist": [],
+    "startup": "./veloren-server-cli",
+    "config": {
+        "files": "{\r\n    \"userdata/server/server_config/settings.ron\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"    metrics_address\": \"    metrics_address: \\\"0.0.0.0:{{server.build.env.METRICS_PORT}}\\\",\",\r\n            \"    server_name\": \"    server_name: \\\"{{server.build.env.SERVER_NAME}}\\\",\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"Server is ready to accept connections\"\r\n}",
+        "logs": "{}",
+        "stop": "shutdown graceful 10"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\n\r\n\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\n\r\nARCH=$([[ \"$(uname -m)\" == \"x86_64\" ]] && echo \"x86_64\" || echo \"aarch64\")\r\n\r\nif [ -z \"${VERSION}\" ] || [ \"${VERSION}\" == \"weekly\" ]; then\r\n    echo -e \"weekly\"\r\n    DOWNLOAD_URL=https://download.veloren.net/latest/linux/${ARCH}/weekly\r\nelif [ \"${VERSION}\" == \"nightly\" ]; then\r\n    echo -e \"nightly\"\r\n    DOWNLOAD_URL=https://download.veloren.net/latest/linux/${ARCH}/nightly\r\nelse\r\n    echo -e  \"something went wrong\"\r\nfi\r\n\r\necho -e \"download url: ${DOWNLOAD_URL}\"\r\nwget ${DOWNLOAD_URL} -O files.zip\r\n\r\nunzip -o files.zip\r\nrm files.zip\r\n\r\nchmod +x veloren-server-cli\r\n\r\n## generate config because there is no better way to get it.\r\nmkdir -p /mnt/server/userdata/server/server_config/\r\nif [ ! -f /mnt/server/userdata/server/server_config/settings.ron ]; then\r\n    wget https://raw.githubusercontent.com/pelican-eggs/games-standalone/refs/heads/main/veloren/settings.ron -O /tmp/settings.ron\r\n    sed \"s/14004/${SERVER_PORT}/g\" /tmp/settings.ron > /mnt/server/userdata/server/server_config/settings.ron\r\n    rm /tmp/settings.ron\r\n    echo \"config file pulled\"\r\nfi\r\n\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "版本",
+            "description": "weekly = 下载最新的每周构建。\nnightly = 下载最新的每夜构建。",
+            "env_variable": "VERSION",
+            "default_value": "weekly",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:weekly,nightly",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器名称",
+            "description": "你的服务器将显示的名称",
+            "env_variable": "SERVER_NAME",
+            "default_value": "A pterodactyl hosted server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:64",
+            "field_type": "text"
+        },
+        {
+            "name": "指标端口",
+            "description": "游戏端口 +1",
+            "env_variable": "METRICS_PORT",
+            "default_value": "14005",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|integer",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/256"
+},"egg-viaaas.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/193/download/egg-viaaas.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:06+00:00",
+    "name": "VIAaaS",
+    "author": "regulad@outlook.com",
+    "description": "VIAaaS - ViaVersion 即服务 - 独立 ViaVersion 代理",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}} -sslPort={{WEBSERVER_PORT}}",
+    "config": {
+        "files": "{\r\n    \"config/viaaas.yml\": {\r\n        \"parser\": \"yaml\",\r\n        \"find\": {\r\n            \"port\": \"{{server.build.default.port}}\",\r\n            \"bind-address\": \"0.0.0.0\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Application started in \"\r\n}",
+        "stop": "end"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:alpine",
+            "entrypoint": "ash",
+            "script": "#!/bin/ash\r\n# VIAaaS Installation Script\r\n#\r\n# Server Files: /mnt/server\r\ncd /mnt/server\r\nwget -O ${SERVER_JARFILE} \"https://jitpack.io/com/github/ViaVersion/VIAaaS/master-SNAPSHOT/VIAaaS-master-SNAPSHOT-all.jar\"\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "VIAaaS JAR 文件",
+            "description": "下载并运行 VIAaaS 时要使用的 JAR 文件名。",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "VIAaaS-all.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Web服务器端口",
+            "description": "监听Web服务器连接的端口。",
+            "env_variable": "WEBSERVER_PORT",
+            "default_value": "25543",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/193"
+},"egg-viaproxy.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/194/download/egg-viaproxy.json"
+    },
+    "exported_at": "2026-08-23T08:16:07+00:00",
+    "name": "ViaProxy",
+    "author": "contact@ste4d.net",
+    "description": "ViaProxy 是一个独立代理，允许玩家加入所有版本的 Minecraft 服务器（经典版、Alpha 版、Beta 版、正式版、基岩版）。",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "Java 21": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_21",
+        "Java 22": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_22",
+        "Java 25": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_25"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}} cli",
+    "config": {
+        "files": "{\n    \"viaproxy.yml\": {\n        \"parser\": \"yaml\",\n        \"find\": {\n            \"bind-address\": \"0.0.0.0:{{server.build.default.port}}\"\n        }\n    }\n}",
+        "startup": "{\n    \"done\": \"Binding proxy server to\"\n}",
+        "logs": "{}",
+        "stop": "exit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/ash\r\n# ViaProxy Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n\r\n## get release info and download links\r\nLATEST_JSON=$(curl --silent \"https://api.github.com/repos/ViaVersion/ViaProxy/releases/latest\")\r\nRELEASES=$(curl --silent \"https://api.github.com/repos/ViaVersion/ViaProxy/releases\")\r\nMATCH=\"ViaProxy-[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+\\.jar\"\r\n\r\nif [ -z \"${VERSION}\" ] || [ \"${VERSION}\" == \"latest\" ]; then\r\n    DOWNLOAD_URL=$(echo ${LATEST_JSON} | jq .assets | jq -r .[].browser_download_url | grep -i ${MATCH})\r\nelse\r\n    VERSION_CHECK=$(echo ${RELEASES} | jq -r --arg VERSION \"${VERSION}\" '.[] | select(.tag_name==$VERSION) | .tag_name')\r\n    if [ \"${VERSION}\" == \"${VERSION_CHECK}\" ]; then\r\n        DOWNLOAD_URL=$(echo ${RELEASES} | jq -r --arg VERSION \"${VERSION}\" '.[] | select(.tag_name==$VERSION) | .assets[].browser_download_url' | grep -i ${MATCH})\r\n    else\r\n        echo -e \"defaulting to latest release\"\r\n        DOWNLOAD_URL=$(echo ${LATEST_JSON} | jq .assets | jq -r .[].browser_download_url)\r\n    fi\r\nfi\r\n\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\n\r\n# Download the .jar file\r\necho \"Downloading ViaProxy version $VERSION...\"\r\ncurl -sSL -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:alpine",
+            "entrypoint": "ash"
+        }
+    },
+    "variables": [
+        {
+            "name": "ViaProxy JAR",
+            "description": "服务器Jar文件，默认设置为'via-proxy.jar'。\n如果您希望使用不同的Jar文件名，请将其设置为其他值。",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "viaproxy.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:/^([\\w\\d._-]+)(\\.jar)$/",
+            "field_type": "text"
+        },
+        {
+            "name": "ViaProxy 版本",
+            "description": "要安装的ViaProxy版本，可以是latest或3.4.1。",
+            "env_variable": "VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/194"
+},"egg-waterdog.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/188/download/egg-waterdog.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:05+00:00",
+    "name": "Waterdog",
+    "author": "parker@pterodactyl.io",
+    "description": "Waterdog 是著名的 Waterfall 的一个分支，而 Waterfall 又是著名的 BungeeCord 服务器传送套件的一个分支。",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Listening on \"\r\n}",
+        "stop": "end"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n\r\nif [ ! -d /mnt/server ]; then\r\n    mkdir /mnt/server\r\nfi\r\n\r\ncd /mnt/server\r\n\r\n# Adding '.jar' if it isn't part of the file name\r\nif [[ \"${SERVER_JARFILE}\" == \"*\\.jar\" ]]; then\r\n    echo -e \"adding.jar to server file name\"\r\n    SERVER_JARFILE=\"${SERVER_JARFILE}.jar\"\r\nfi\r\n\r\nif [ -z \"${WATERDOG_VERSION}\" ] || [ \"${WATERDOG_VERSION}\" == \"latest\" ]; then\r\n    echo -e \"downloading latest waterdog build\\n\"\r\n    curl -sSL -o ${SERVER_JARFILE} https://jenkins.waterdog.dev/job/Waterdog/job/Waterdog/job/master-zlib/lastSuccessfulBuild/artifact/Waterfall-Proxy/bootstrap/target/Waterdog.jar\r\nelse \r\n    echo -e \"downloading waterdog build ${WATERDOG_VERSION}\\n\"\r\n    curl -sSL -o ${SERVER_JARFILE} https://jenkins.waterdog.dev/job/Waterdog/job/Waterdog/job/master-zlib/${WATERDOG_VERSION}/artifact/Waterfall-Proxy/bootstrap/target/Waterdog.jar\r\nfi\r\n\r\nif [ ! -f config.yml ]; then\r\n    echo -e \"Downloading waterfall config.yml\"\r\n   curl -o config.yml https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/minecraft/proxy/java/waterfall/config.yml\r\nelse\r\n    echo -e \"Waterfall config.yml exists. Will not pull a new file\"\r\nfi\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "Waterdog 版本",
+            "description": "要拉取并安装的构建版本。（例如：23），或设置为 latest  \n\n这是 https://jenkins.waterdog.dev/ 上的构建编号。",
+            "env_variable": "WATERDOG_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器Jar文件",
+            "description": "要运行的jar文件",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "server.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/188"
+},"egg-waterdog-pe.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/187/download/egg-waterdog-pe.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:05+00:00",
+    "name": "Waterdog PE",
+    "author": "parker@pterodactyl.io",
+    "description": "适用于Minecraft: Bedrock Edition的全新代理服务器",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8"
+    },
+    "file_denylist": [],
+    "startup": "java -Dterminal.ansi=true -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Started query on \"\r\n}",
+        "stop": "end"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n\r\n\r\nif [ ! -d /mnt/server ]; then\r\n    mkdir /mnt/server\r\nfi\r\n\r\ncd /mnt/server\r\n\r\n# Adding '.jar' if it isn't part of the file name\r\nif [[ \"${SERVER_JARFILE}\" == \"*\\.jar\" ]]; then\r\n    echo -e \"adding.jar to server file name\"\r\n    SERVER_JARFILE=\"${SERVER_JARFILE}.jar\"\r\nfi\r\n\r\nif [ -z \"${WATERDOG_VERSION}\" ] || [ \"${WATERDOG_VERSION}\" == \"latest\" ]; then\r\n    echo -e \"downloading latest waterdog pe build\\n\"\r\n    curl -sSL -o ${SERVER_JARFILE} https://jenkins.waterdog.dev/job/Waterdog/job/WaterdogPE/job/release/lastSuccessfulBuild/artifact/target/Waterdog.jar\r\nelse \r\n    echo -e \"downloading waterdog pe build ${WATERDOG_VERSION}\\n\"\r\n    curl -sSL -o ${SERVER_JARFILE} https://jenkins.waterdog.dev/job/Waterdog/job/WaterdogPE/job/release/${WATERDOG_VERSION}/artifact/target/Waterdog.jar\r\nfi\r\n\r\nif [ ! -f config.yml ]; then\r\n    echo -e \"Downloading waterdog pe config.yml\"\r\n   curl -o config.yml https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/minecraft/proxy/bedrock/waterdog_pe/config.yml\r\nelse\r\n    echo -e \"Waterfall config.yml exists. Will not pull a new file\"\r\nfi\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "Waterdog PE 版本",
+            "description": "要拉取并安装的构建版本。（例如：23），或设置为 latest  \n\n这是 https://jenkins.waterdog.dev/ 上的构建编号。",
+            "env_variable": "WATERDOG_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器Jar文件",
+            "description": "要运行的jar文件",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "server.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/187"
+},"egg-waterfall.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/195/download/egg-waterfall.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:15:59+00:00",
+    "name": "Waterfall",
+    "author": "hostmaster@waterfallgaming.net",
+    "description": "Waterfall 是著名的 BungeeCord 服务器传送套件的一个分支。",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -Dterminal.jline=false -Dterminal.ansi=true -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{\r\n    \"config.yml\": {\r\n        \"parser\": \"yaml\",\r\n        \"find\": {\r\n            \"listeners[0].host\": \"0.0.0.0:{{server.build.default.port}}\",\r\n            \"servers.*.address\": {\r\n                \"127.0.0.1\": \"{{config.docker.interface}}\",\r\n                \"localhost\": \"{{config.docker.interface}}\"\r\n            }\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Listening on \"\r\n}",
+        "stop": "end"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n# Waterfall Installation Script\r\n#\r\n# Server Files: /mnt/server\r\nPROJECT=waterfall\r\n\r\napt update\r\napt install -y curl jq\r\n\r\nif [ -n \"${DL_LINK}\" ]; then\r\n\techo -e \"Using supplied download url: ${DL_LINK}\"\r\n\tDOWNLOAD_URL=`eval echo $(echo ${DL_LINK} | sed -e 's/{{/${/g' -e 's/}}/}/g')`\r\nelse\r\n\tVER_EXISTS=`curl -s https://api.papermc.io/v2/projects/${PROJECT} | jq -r --arg VERSION $MINECRAFT_VERSION '.versions[] | contains($VERSION)' | grep true`\r\n\tLATEST_VERSION=`curl -s https://api.papermc.io/v2/projects/${PROJECT} | jq -r '.versions' | jq -r '.[-1]'`\r\n\r\n\tif [ \"${VER_EXISTS}\" == \"true\" ]; then\r\n\t\techo -e \"Version is valid. Using version ${MINECRAFT_VERSION}\"\r\n\telse\r\n\t\techo -e \"Using the latest ${PROJECT} version\"\r\n\t\tMINECRAFT_VERSION=${LATEST_VERSION}\r\n\tfi\r\n\t\r\n\tBUILD_EXISTS=`curl -s https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION} | jq -r --arg BUILD ${BUILD_NUMBER} '.builds[] | tostring | contains($BUILD)' | grep true`\r\n\tLATEST_BUILD=`curl -s https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION} | jq -r '.builds' | jq -r '.[-1]'`\r\n\t\r\n\tif [ \"${BUILD_EXISTS}\" == \"true\" ]; then\r\n\t\techo -e \"Build is valid for version ${MINECRAFT_VERSION}. Using build ${BUILD_NUMBER}\"\r\n\telse\r\n\t\techo -e \"Using the latest ${PROJECT} build for version ${MINECRAFT_VERSION}\"\r\n\t\tBUILD_NUMBER=${LATEST_BUILD}\r\n\tfi\r\n\t\r\n\tJAR_NAME=${PROJECT}-${MINECRAFT_VERSION}-${BUILD_NUMBER}.jar\r\n\t\r\n\techo \"Version being downloaded\"\r\n\techo -e \"MC Version: ${MINECRAFT_VERSION}\"\r\n\techo -e \"Build: ${BUILD_NUMBER}\"\r\n\techo -e \"JAR Name of Build: ${JAR_NAME}\"\r\n\tDOWNLOAD_URL=https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds/${BUILD_NUMBER}/downloads/${JAR_NAME}\r\nfi\r\n\r\ncd /mnt/server\r\n\r\necho -e \"Running curl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\"\r\n\r\nif [ -f ${SERVER_JARFILE} ]; then\r\n\tmv ${SERVER_JARFILE} ${SERVER_JARFILE}.old\r\nfi\r\n\r\ncurl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\r\n\r\nif [ ! -f config.yml ]; then\r\n\techo -e \"Downloading ${PROJECT} config.yml\"\r\n\tcurl -o config.yml https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/minecraft/proxy/java/waterfall/config.yml\r\nelse\r\n\techo -e \"${PROJECT} config.yml exists. Will not pull a new file\"\r\nfi"
+        }
+    },
+    "variables": [
+        {
+            "name": "我的世界版本",
+            "description": "Waterfall 设计支持的 Minecraft 版本。",
+            "env_variable": "MINECRAFT_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|alpha_num|between:1,6",
+            "field_type": "text"
+        },
+        {
+            "name": "Waterfall Jar 文件",
+            "description": "运行Waterfall时要使用的jar文件名。",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "waterfall.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:/^([\\w\\d._-]+)(\\.jar)$/",
+            "field_type": "text"
+        },
+        {
+            "name": "下载链接",
+            "description": "下载Waterfall jar的服务端jar链接。",
+            "env_variable": "DL_LINK",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Waterfall 构建编号",
+            "description": "默认为最新版本。\n\n如果设置为最新版本或无效版本，将获取最新的构建编号。",
+            "env_variable": "BUILD_NUMBER",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/195"
+},"egg-wine.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/259/download/egg-wine-generic.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:12+00:00",
+    "name": "Wine Generic",
+    "author": "parker@parkervcp.com",
+    "description": "一个使用Wine运行服务器的通用egg",
+    "features": null,
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:wine_devel": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:wine_devel",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:wine_latest": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:wine_latest",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:wine_staging": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:wine_staging"
+    },
+    "file_denylist": [],
+    "startup": "wine {{SERVER_EXECUTABLE}}",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"change me\"\r\n}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n# The wine generic server installer\r\n# This will just pull a download link and unpack it in directory if specified.\r\n\r\napt update -y\r\napt install -y curl file unzip\r\n\r\nif [ ! -d /mnt/server ]; then\r\n    mkdir -p /mnt/server/\r\nfi\r\n\r\ncd /mnt/server/\r\n\r\n# if an install dir is set then make it and change to it.\r\nif [ ! -z ${INSTALL_DIR} ]; then\r\n    mkdir -p ${INSTALL_DIR}\r\n    cd ${INSTALL_DIR}\r\nfi\r\n\r\n# validate server link\r\nif [ ! -z \"${DOWNLOAD_URL}\" ]; then \r\n    if curl --output /dev/null --silent --head --fail ${DOWNLOAD_URL}; then\r\n        echo -e \"link is valid. setting download link to ${DOWNLOAD_URL}\"\r\n        DOWNLOAD_LINK=${DOWNLOAD_URL}\r\n    else        \r\n        echo -e \"link is invalid closing out\"\r\n        exit 2\r\n    fi\r\nfi\r\n\r\ncurl -sSL ${DOWNLOAD_LINK} -o ${DOWNLOAD_LINK##*/}\r\n\r\n# unpack servver files\r\nFILETYPE=$(file -F ',' ${DOWNLOAD_LINK##*/} | cut -d',' -f2 | cut -d' ' -f2)\r\n\r\nif [ \"$FILETYPE\" == \"gzip\" ]; then\r\n    tar xzvf ${DOWNLOAD_LINK##*/}\r\nelif [ \"$FILETYPE\" == \"Zip\" ]; then\r\n    unzip ${DOWNLOAD_LINK##*/}\r\nelif [ \"$FILETYPE\" == \"XZ\" ]; then\r\n    tar xvf ${DOWNLOAD_LINK##*/}\r\nelse\r\n    echo -e \"unknown filetype. Exiting\"\r\n    exit 2 \r\nfi\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "服务器下载链接",
+            "description": "用于下载服务器文件的URL。",
+            "env_variable": "DOWNLOAD_URL",
+            "default_value": "https://beamng-mp.com/server/BeamMP_Server.zip",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器可执行文件",
+            "description": "要运行的服务器可执行文件。",
+            "env_variable": "SERVER_EXECUTABLE",
+            "default_value": "BeamMP-Server.exe",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "要安装到的子目录",
+            "description": "例如，如果服务器需要安装到 /home/container/server/bin/，则使用 server/bin/",
+            "env_variable": "INSTALL_DIR",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "nullable|string",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/259"
+},"egg-xonotic.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/262/download/egg-xonotic.json"
+    },
+    "exported_at": "2026-08-23T08:16:13+00:00",
+    "name": "Xonotic",
+    "author": "parker@parkervcp.com",
+    "description": "Xonotic: 免费且快速的竞技场射击游戏",
+    "features": null,
+    "docker_images": {
+        "Steamcmd Debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:debian"
+    },
+    "file_denylist": [],
+    "startup": "./xonotic-linux64-dedicated +log_file latest.log +net_address 0.0.0.0 +port {{SERVER_PORT}} +maxplayers {{MAX_PLAYERS}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\n    \"done\": \"Server listening on address 0.0.0.0:\"\n}",
+        "logs": "{}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/ash\r\n# Vanilla Xonotic Installation Script\r\n#\r\n# Server Files: /mnt/server\r\napk add rsync --no-cache\r\n\r\nmkdir -p /mnt/server\r\n\r\ncd /mnt/server\r\n\r\nwget -O xonotic.zip http://dl.xonotic.org/xonotic-${VERSION}.zip\r\n\r\nunzip -o xonotic.zip\r\n\r\nmv Xonotic/* ./\r\n\r\n./misc/tools/rsync-updater/update-to-autobuild.sh -y\r\n\r\necho \"finished autobuild\"\r\n\r\n# create initial folder structure to copy the default config to, because it only gets created on first startup\r\nmkdir -p .xonotic/data\r\ncp -n server/server.cfg .xonotic/data/server.cfg || true # do not overwrite existing config file\r\n\r\nrm -rf COPYING Makefile *glx* *glx *sdl* *sdl *linux32* *exe *.app *.sh bin* GPL* Docs/ gmqcc/ source/ misc/ Xonotic/ xonotic.zip\r\n\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:alpine",
+            "entrypoint": "ash"
+        }
+    },
+    "variables": [
+        {
+            "name": "最大玩家数",
+            "description": "服务器允许的最大玩家数",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "16",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|digits_between:1,2",
+            "field_type": "text"
+        },
+        {
+            "name": "版本",
+            "description": "",
+            "env_variable": "VERSION",
+            "default_value": "0.8.6",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/262"
+},"egg-zandronum.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/210/download/egg-zandronum.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:20+00:00",
+    "name": "Zandronum",
+    "author": "sup@libtar.de",
+    "description": "Zandronum is a multiplayer oriented port, based off Skulltag, for Doom and Doom II by id Software.\r\n\r\nThis egg uses the Freedoom WAD by default.",
+    "features": null,
+    "docker_images": {
+        "Debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:debian"
+    },
+    "file_denylist": [],
+    "startup": "./zandronum-server -port {{SERVER_PORT}} -config /home/container/zandronum.ini +set dmflags {{DMFLAGS}} +set dmflags2 {{DMFLAGS2}} +set zadmflags {{ZADMFLAGS}} +set compatflags {{COMPATFLAGS}} +set compatflags2 {{COMPATFLAGS2}} +set zacompatflags {{ZACOMPATFLAGS}} -iwad IWAD/{{IWAD}} -file PWAD/{{PWADS}} -host {{MAX_PLAYERS}} +map {{MAP}} -skill {{SKILL}}  -netmode 1",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"UDP Initialized.\"\r\n}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:alpine",
+            "entrypoint": "ash",
+            "script": "#!/bin/bash\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\n\r\nARCH=$([[ \"$(uname -m)\" == \"x86_64\" ]] && echo \"linux-x86_64\" || echo \"linuxserver-armv8\")\r\n\r\necho \"Fetching latest version number of Zandronum\"\r\nversion=\"$(wget -q -O - http://zandronum.com/download |\r\nsed -n 's/.*The latest version is <strong>\\(.*\\)<\\/strong>.*/\\1/p')\"\r\n\r\nz=\"zandronum\"$version\"-${ARCH}.tar.bz2\"\r\n\r\necho \"Downloading release $version of Zandronum.\"\r\necho \"Executing wget -nc https://zandronum.com/downloads/$z\"\r\nwget -nc https://zandronum.com/downloads/\"$z\"\r\necho \"Untar Zandronum\"\r\necho \"Executing tar -xjvf $z\"\r\ntar -xjvf \"$z\"\r\n\r\necho \"Remove useless files\"\r\nrm \"$z\"\r\nrm zandronum # This is the client, we don't need that.\r\n\r\necho \"Making zandronum-server executable\"\r\nchmod +x zandronum-server\r\n\r\n# Create IWAD and PWAD folder\r\nmkdir -p IWAD\r\nmkdir -p PWAD\r\n\r\n# Download latest freedoom for the default iwad\r\nfreedoom=$(curl -s https://api.github.com/repos/freedoom/freedoom/releases/latest | jq .assets | jq -r .[].browser_download_url | grep -m1 -i freedoom-.*.zip)\r\n\r\necho \"$freedoom\"\r\ncurl -L -o freedoom.zip $freedoom\r\n\r\nunzip -j -o freedoom.zip '*/*' -d IWAD/\r\n\r\n# Removing useless files\r\nrm freedoom.zip\r\nrm IWAD/*.html\r\nrm IWAD/*.pdf\r\n\r\n# Download the configuration file. The server fail to generate a config by itself so we have to supply one or it will crash\r\nwget https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/doom/zandronum/zandronum.ini -O /mnt/server/zandronum.ini\r\n\r\ntouch adminlist.txt\r\ntouch whitelist.txt\r\ntouch banlist.txt\r\n\r\nif [[ \"${GEOIP}\" == \"1\" ]]; then\r\n    echo \"setting up GeoIP\"\r\n    wget https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/doom/zandronum/GeoIP.dat -O /mnt/server/GeoIP.dat\r\nfi\r\n\r\n\r\necho \"Install finished.\""
+        }
+    },
+    "variables": [
+        {
+            "name": "最大玩家数",
+            "description": "您的游戏服务器允许的最大玩家数量。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "16",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "nullable|integer|max:128",
+            "field_type": "text"
+        },
+        {
+            "name": "IWAD",
+            "description": "IWAD是Doom引擎游戏的主要资源文件，包含游戏的所有原始音效、关卡和图形。",
+            "env_variable": "IWAD",
+            "default_value": "freedoom1.wad",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "PWADS",
+            "description": "如果您想使用多个PWAD，可以通过用空格分隔它们来实现。\n\nPWAD是一种包含数据块的WAD，通常用作附加组件。它们替换游戏内资源。",
+            "env_variable": "PWADS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "技能",
+            "description": "设置游戏难度。",
+            "env_variable": "SKILL",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|between:0,15",
+            "field_type": "text"
+        },
+        {
+            "name": "地图",
+            "description": "服务器启动时应使用的地图。",
+            "env_variable": "MAP",
+            "default_value": "e1m1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "dmflags",
+            "description": "游戏玩法标志. https://wiki.zandronum.com/DMFlags",
+            "env_variable": "DMFLAGS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "dmflags2",
+            "description": "游戏玩法标志. https://wiki.zandronum.com/DMFlags",
+            "env_variable": "DMFLAGS2",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "zadmflags",
+            "description": "Zandronum 特定游戏标志。 https://wiki.zandronum.com/DMFlags",
+            "env_variable": "ZADMFLAGS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "兼容性标志",
+            "description": "兼容性标志。https://wiki.zandronum.com/DMFlags",
+            "env_variable": "COMPATFLAGS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "兼容标志2",
+            "description": "兼容性标志。https://wiki.zandronum.com/DMFlags",
+            "env_variable": "COMPATFLAGS2",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "zacompatflags",
+            "description": "Zandronum 特定的兼容性标志。https://wiki.zandronum.com/DMFlags",
+            "env_variable": "ZACOMPATFLAGS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "启用 GeoIP",
+            "description": "GeoIP 用于识别客户端 IP 地址所在的国家",
+            "env_variable": "GEOIP",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/210"
+}}}
