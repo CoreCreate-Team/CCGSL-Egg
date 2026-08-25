@@ -1,0 +1,276 @@
+{"files":{"egg-tower-unite.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/128/download/egg-tower-unite.json"
+    },
+    "exported_at": "2026-08-23T08:15:35+00:00",
+    "name": "Tower Unite",
+    "author": "teamwuffy@gmail.com",
+    "description": "游玩、创造、派对！Tower Unite 是一款基于社区的虚拟世界派对游戏，包含在线游戏、娱乐、活动，并且绝对没有微交易。",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "Steamcmd Debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:debian"
+    },
+    "file_denylist": [],
+    "startup": "./Tower/Binaries/Linux/TowerServer-Linux-Shipping {{GAME_MAP}} -log -Port={{SERVER_PORT}} -QueryPort={{QUERY_PORT}} -nosteamclient",
+    "config": {
+        "files": "{\n    \"Tower/Saved/Config/LinuxServer/TowerServer.ini\": {\n        \"parser\": \"file\",\n        \"find\": {\n            \"ServerTitle=\": \"ServerTitle={{server.build.env.SERVER_TITLE}}\",\n            \"MaxPlayers=\": \"MaxPlayers={{server.build.env.MAX_PLAYERS}}\",\n            \"SteamLoginToken=\": \"SteamLoginToken={{server.build.env.STEAM_LOGIN_TOKEN}}\",\n            \"TowerLoginToken=\": \"TowerLoginToken={{server.build.env.TOWER_LOGIN_TOKEN}}\",\n            \"CondoAutoSave=\": \"CondoAutoSave={{server.build.env.AUTO_SAVE}}\"          \n        }\n    }\n}",
+        "startup": "{\n    \"done\": \"LogNet: GameNetDriver SteamNetDriver_0 IpNetDriver listening on port\"\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n# Image to install with is 'registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian'\r\n\r\n\r\n## just in case someone removed the defaults.\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd /tmp\r\nmkdir -p /mnt/server/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steamcmd\r\nmkdir -p /mnt/server/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd /mnt/server/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root /mnt\r\nexport HOME=/mnt/server\r\n\r\n## install game using steamcmd\r\n./steamcmd.sh +force_install_dir /mnt/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) ${INSTALL_FLAGS} validate +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n\r\n## set up 32 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk32\r\ncp -v linux32/steamclient.so ../.steam/sdk32/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk64\r\ncp -v linux64/steamclient.so ../.steam/sdk64/steamclient.so\r\n\r\n## add below your custom commands if needed\r\n\r\nmkdir -p /mnt/server/Tower/Saved/Config/LinuxServer/\r\n\r\nif [ ! -f /mnt/server/Tower/Saved/Config/LinuxServer/TowerServer.ini ]; then\r\n    echo \"Generating a default config file\"\r\n    curl -sSL -o /mnt/server/Tower/Saved/Config/LinuxServer/TowerServer.ini https://pastebin.com/raw/zy9XTc7m\r\nfi\r\n\r\ncp /mnt/server/linux64/steamclient.so /mnt/server/Tower/Binaries/Linux/steamclient.so\r\n\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "自动保存",
+            "description": "启用自动保存系统，该系统将在更改后定期保存公寓数据。",
+            "env_variable": "AUTO_SAVE",
+            "default_value": "True",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "in:True,False",
+            "field_type": "text"
+        },
+        {
+            "name": "自动更新",
+            "description": "在启动时自动更新服务器",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "游戏地图",
+            "description": "你的专属公寓将使用的公寓地图。",
+            "env_variable": "GAME_MAP",
+            "default_value": "/Game/Maps/C_Condo",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "in:/Game/Maps/C_Condo,/Game/Maps/C_House,/Game/Maps/C_SmoothDirt,/Game/Maps/C_Lobby1,/Game/Maps/C_SmoothAutumn,/Game/Maps/C_Underwater,/Game/Maps/C_Highrise,/Game/Maps/C_Studio,/Game/Maps/C_Theatre,/Game/Maps/C_Courtyard,/Game/Maps/C_IcePlanet",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "设置最大玩家数（2 - 64）（默认 32）",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "32",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "integer|between:2,64",
+            "field_type": "text"
+        },
+        {
+            "name": "查询端口",
+            "description": "",
+            "env_variable": "QUERY_PORT",
+            "default_value": "27016",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "integer|between:1024,65535",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器标题",
+            "description": "设置服务器的标题",
+            "env_variable": "SERVER_TITLE",
+            "default_value": "My Dedicated Condo",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "应用ID",
+            "description": "",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "439660",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "in:439660",
+            "field_type": "text"
+        },
+        {
+            "name": "Steam 登录令牌",
+            "description": "设置令牌以授予您一个静态Steam ID。  \nhttps://steamcommunity.com/dev/managegameservers: APP_ID:394690",
+            "env_variable": "STEAM_LOGIN_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Tower 登录令牌",
+            "description": "允许您连接到Tower Unite的公寓服务器列表。\nhttps://moderation.towerunite.com/manage_game_servers.php",
+            "env_variable": "TOWER_LOGIN_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/128"
+},"egg-travertine.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/191/download/egg-travertine.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:06+00:00",
+    "name": "Travertine",
+    "author": "parker@parkervcp.com",
+    "description": "Travertine 是 Waterfall 的一个分支，支持 1.7 协议。Waterfall 是著名的 BungeeCord 服务器传送套件的一个分支。",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -Dterminal.jline=false -Dterminal.ansi=true -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{\r\n    \"config.yml\": {\r\n        \"parser\": \"yaml\",\r\n        \"find\": {\r\n            \"listeners[0].host\": \"0.0.0.0:{{server.build.default.port}}\",\r\n            \"servers.*.address\": {\r\n                \"127.0.0.1\": \"{{config.docker.interface}}\",\r\n                \"localhost\": \"{{config.docker.interface}}\"\r\n            }\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Listening on \"\r\n}",
+        "stop": "end"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n# Travertine Installation Script\r\n#\r\n# Server Files: /mnt/server\r\nPROJECT=travertine\r\n\r\nif [ -n \"${DL_PATH}\" ]; then\r\n\techo -e \"Using supplied download url: ${DL_PATH}\"\r\n\tDOWNLOAD_URL=`eval echo $(echo ${DL_PATH} | sed -e 's/{{/${/g' -e 's/}}/}/g')`\r\nelse\r\n\tVER_EXISTS=`curl -s https://api.papermc.io/v2/projects/${PROJECT} | jq -r --arg VERSION $MINECRAFT_VERSION '.versions[] | contains($VERSION)' | grep true`\r\n\tLATEST_VERSION=`curl -s https://api.papermc.io/v2/projects/${PROJECT} | jq -r '.versions' | jq -r '.[-1]'`\r\n\r\n\tif [ \"${VER_EXISTS}\" == \"true\" ]; then\r\n\t\techo -e \"Version is valid. Using version ${MINECRAFT_VERSION}\"\r\n\telse\r\n\t\techo -e \"Using the latest ${PROJECT} version\"\r\n\t\tMINECRAFT_VERSION=${LATEST_VERSION}\r\n\tfi\r\n\t\r\n\tBUILD_EXISTS=`curl -s https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION} | jq -r --arg BUILD ${BUILD_NUMBER} '.builds[] | tostring | contains($BUILD)' | grep true`\r\n\tLATEST_BUILD=`curl -s https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION} | jq -r '.builds' | jq -r '.[-1]'`\r\n\t\r\n\tif [ \"${BUILD_EXISTS}\" == \"true\" ]; then\r\n\t\techo -e \"Build is valid for version ${MINECRAFT_VERSION}. Using build ${BUILD_NUMBER}\"\r\n\telse\r\n\t\techo -e \"Using the latest ${PROJECT} build for version ${MINECRAFT_VERSION}\"\r\n\t\tBUILD_NUMBER=${LATEST_BUILD}\r\n\tfi\r\n\t\r\n\tJAR_NAME=${PROJECT}-${MINECRAFT_VERSION}-${BUILD_NUMBER}.jar\r\n\t\r\n\techo \"Version being downloaded\"\r\n\techo -e \"MC Version: ${MINECRAFT_VERSION}\"\r\n\techo -e \"Build: ${BUILD_NUMBER}\"\r\n\techo -e \"JAR Name of Build: ${JAR_NAME}\"\r\n\tDOWNLOAD_URL=https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds/${BUILD_NUMBER}/downloads/${JAR_NAME}\r\nfi\r\n\r\ncd /mnt/server\r\n\r\necho -e \"Running curl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\"\r\n\r\nif [ -f ${SERVER_JARFILE} ]; then\r\n\tmv ${SERVER_JARFILE} ${SERVER_JARFILE}.old\r\nfi\r\n\r\ncurl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\r\n\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "我的世界版本",
+            "description": "水所支持的Minecraft版本。",
+            "env_variable": "MINECRAFT_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|alpha_num|between:1,6",
+            "field_type": "text"
+        },
+        {
+            "name": "Travertine Jar 文件",
+            "description": "运行Travertine时要使用的jar文件名。",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "travertine.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:/^([\\w\\d._-]+)(\\.jar)$/",
+            "field_type": "text"
+        },
+        {
+            "name": "下载链接",
+            "description": "下载Travertine服务器jar文件的链接。",
+            "env_variable": "DL_LINK",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Travertine 构建编号",
+            "description": "默认为最新版本。\n\n如果设置为最新版本或无效版本，将获取最新的构建编号。",
+            "env_variable": "BUILD_NUMBER",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/191"
+},"egg-tshock.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/250/download/egg-tshock-legacy.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:15+00:00",
+    "name": "tshock legacy",
+    "author": "parker@parkervcp.com",
+    "description": "TShock 模组的泰拉瑞亚服务器。\n\nhttps://tshock.co/",
+    "features": null,
+    "docker_images": {
+        "mono": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:mono_latest"
+    },
+    "file_denylist": [],
+    "startup": "mono TerrariaServer.exe -ip 0.0.0.0 -port {{SERVER_PORT}} -maxplayers {{MAX_PLAYERS}} -world {{WORLD_NAME}}.wld -autocreate {{WORLD_SIZE}}",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Type 'help' for a list of commands\"\r\n}",
+        "stop": "exit"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "/bin/bash",
+            "script": "#!/bin/bash\r\n# Vanilla tModloader Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n## install packages to get version and download links\r\napt update\r\napt install -y curl wget jq file unzip\r\n\r\n\r\n## get release info and download links\r\nLATEST_JSON=$(curl --silent \"https://api.github.com/repos/Pryaxis/TShock/releases/latest\")\r\nRELEASES=$(curl --silent \"https://api.github.com/repos/Pryaxis/TShock/releases\")\r\n\r\nif [ -z \"$TSHOCK_VERSION\" ] || [ \"$TSHOCK_VERSION\" == \"latest\" ]; then\r\n    DOWNLOAD_LINK=$(echo $LATEST_JSON | jq .assets | jq -r .[].browser_download_url)\r\nelse\r\n    VERSION_CHECK=$(echo $RELEASES | jq -r --arg VERSION \"$TSHOCK_VERSION\" '.[] | select(.tag_name==$VERSION) | .tag_name')\r\n    if [ \"$TSHOCK_VERSION\" == \"$VERSION_CHECK\" ]; then\r\n        DOWNLOAD_LINK=$(echo $RELEASES | jq -r --arg VERSION \"$TSHOCK_VERSION\" '.[] | select(.tag_name==$VERSION) | .assets[].browser_download_url')\r\n    else\r\n        echo -e \"defaulting to latest release\"\r\n        DOWNLOAD_LINK=$(echo $LATEST_JSON | jq .assets | jq -r .[].browser_download_url)\r\n    fi\r\nfi\r\n\r\n## mkdir and cd to /mnt/server/\r\nmkdir -p /mnt/server\r\n\r\ncd /mnt/server\r\n\r\n## download release\r\necho -e \"running: wget $DOWNLOAD_LINK\"\r\nwget $DOWNLOAD_LINK\r\n\r\nFILETYPE=$(file -F ',' ${DOWNLOAD_LINK##*/} | cut -d',' -f2 | cut -d' ' -f2)\r\nif [ \"$FILETYPE\" == \"gzip\" ]; then\r\n    tar xzvf ${DOWNLOAD_LINK##*/}\r\nelif [ \"$FILETYPE\" == \"Zip\" ]; then\r\n    unzip -o ${DOWNLOAD_LINK##*/}\r\nelse\r\n    echo -e \"unknown filetype. Exeting\"\r\n    exit 2 \r\nfi\r\n\r\necho -e \"install complete\""
+        }
+    },
+    "variables": [
+        {
+            "name": "最大玩家数",
+            "description": "服务器能容纳的最大玩家数量。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "8",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|digits_between:1,3",
+            "field_type": "text"
+        },
+        {
+            "name": "世界大小",
+            "description": "定义世界的尺寸。3种尺寸：1（小型）、2（中型）、3（大型）。",
+            "env_variable": "WORLD_SIZE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|digits_between:1,3",
+            "field_type": "text"
+        },
+        {
+            "name": "世界名称",
+            "description": "世界文件的名称。",
+            "env_variable": "WORLD_NAME",
+            "default_value": "world",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Tshock 版本",
+            "description": "将要安装的tshock版本。当前最新可用版本是：v4.5.18!",
+            "env_variable": "TSHOCK_VERSION",
+            "default_value": "v4.5.18",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/250"
+}}}
