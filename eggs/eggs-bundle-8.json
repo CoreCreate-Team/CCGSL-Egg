@@ -1,0 +1,429 @@
+{"files":{"egg-stormworks.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/118/download/egg-stormworks-build-and-rescue.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:15:32+00:00",
+    "name": "Stormworks: Build and Rescue",
+    "author": "iamkubi@gmail.com",
+    "description": "加入一个你可以设计、创造和驾驶自己的海空救援服务的世界。释放你内心的英雄，在海上与凶猛的风暴搏斗，救援需要帮助的人。",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "wine_staging": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:wine_staging"
+    },
+    "file_denylist": [],
+    "startup": "xvfb-run wine server64.exe +server_dir /home/container/server_data",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Server: ready to spawn for peer\"\r\n}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n# Image to install with is 'registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian'\r\n\r\n##\r\n#\r\n# Variables\r\n# STEAM_USER, STEAM_PASS, STEAM_AUTH - Steam user setup. If a user has 2fa enabled it will most likely fail due to timeout. Leave blank for anon install.\r\n# WINDOWS_INSTALL - if it's a windows server you want to install set to 1\r\n# SRCDS_APPID - steam app id found here - https://developer.valvesoftware.com/wiki/Dedicated_Servers_List\r\n# SRCDS_BETAID - beta branch of a steam app. Leave blank to install normal branch\r\n# SRCDS_BETAPASS - password for a beta branch should one be required during private or closed testing phases.. Leave blank for no password.\r\n# INSTALL_FLAGS - Any additional SteamCMD  flags to pass during install.. Keep in mind that steamcmd auto update process in the docker image might overwrite or ignore these when it performs update on server boot.\r\n# AUTO_UPDATE - Adding this variable to the egg allows disabling or enabling automated updates on boot. Boolean value. 0 to disable and 1 to enable.\r\n#\r\n ##\r\n\r\n# Install packages. Default packages below are not required if using our existing install image thus speeding up the install process.\r\n# apt -y update\r\n# apt -y --no-install-recommends install curl lib32gcc-s1 ca-certificates\r\n\r\n## just in case someone removed the defaults.\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd /tmp\r\nmkdir -p /mnt/server/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steamcmd\r\nmkdir -p /mnt/server/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd /mnt/server/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root /mnt\r\nexport HOME=/mnt/server\r\n\r\n## install game using steamcmd\r\n./steamcmd.sh +force_install_dir /mnt/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) ${INSTALL_FLAGS} validate +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n\r\n## set up 32 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk32\r\ncp -v linux32/steamclient.so ../.steam/sdk32/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk64\r\ncp -v linux64/steamclient.so ../.steam/sdk64/steamclient.so\r\n\r\n## installation end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "SRCDS_APPID",
+            "description": "Steam 应用ID",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "1247090",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Windows安装",
+            "description": "",
+            "env_variable": "WINDOWS_INSTALL",
+            "default_value": "1",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "自动更新",
+            "description": "这将在启动时自动更新SteamCMD。0为禁用，1为启用。",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "0",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "boolean",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/118"
+},"egg-supertuxkart.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/197/download/egg-supertuxkart.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:24+00:00",
+    "name": "SuperTuxKart",
+    "author": "mattamn107@github.com",
+    "description": "用于托管SuperTuxKart服务器的Egg。",
+    "features": null,
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:debian"
+    },
+    "file_denylist": [],
+    "startup": "./bin/supertuxkart --server-config={{CONFIG_NAME}} --lan-server={{SERVER_NAME}} --network-console --port=\"{{SERVER_PORT}}\" --difficulty={{DIFFICULTY}} --mode={{MODE}} --max-players={{MAX_PLAYERS}} --motd=\"{{MOTD}}\"",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Available command:\"\r\n}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n\r\n# Install build tools\r\necho \"deb http://deb.debian.org/debian bullseye-backports main\" >> /etc/apt/sources.list && \\\r\napt-get update && apt-get -y full-upgrade && \\\r\n    apt-get install -y build-essential cmake libbluetooth-dev libsdl2-dev \\\r\n    libcurl4-openssl-dev libenet-dev libfreetype6-dev libharfbuzz-dev \\\r\n    libjpeg-dev libogg-dev libopenal-dev libpng-dev \\\r\n    libssl-dev libvorbis-dev libmbedtls-dev pkg-config zlib1g-dev subversion\r\n\r\nif [ ! -d \"/mnt/server/stk-code\" ] && [ ! -d \"/mnt/server/stk-assets\" ]; then\r\n    \r\n    #clone code repo\r\n    git clone https://github.com/supertuxkart/stk-code /mnt/server/stk-code\r\n    \r\n    #get assets\r\n    svn co https://svn.code.sf.net/p/supertuxkart/code/stk-assets /mnt/server/stk-assets\r\n    \r\n    # go into the stk-code directory\r\n    cd /mnt/server/stk-code\r\n    \r\n    # create and enter the cmake_build directory\r\n    mkdir cmake_build\r\n    \r\nelse\r\n\r\n    #update existing stuff\r\n    cd /mnt/server/stk-assets\r\n    svn up\r\n    \r\n    cd /mnt/server/stk-code\r\n    git pull\r\n\r\n\r\nfi\r\n\r\n#build the server\r\ncd cmake_build\r\ncmake .. -DSERVER_ONLY=ON\r\nmake\r\n\r\n#copy binary to root/bin and make it executable\r\nmkdir /mnt/server/bin\r\ncp /mnt/server/stk-code/cmake_build/bin/supertuxkart /mnt/server/bin/supertuxkart\r\nchmod +x /mnt/server/bin/supertuxkart\r\n\r\n#copy data folder\r\ncp -r /mnt/server/stk-code/data /mnt/server/data\r\n\r\n#copy extra assets to data folder\r\ncd /mnt/server/stk-assets\r\ncp -r library models music sfx textures tracks karts /mnt/server/data/\r\n\r\n# Delete repo's to save disk space.\r\n#rm -rf /mnt/server/stk-code && rm -rf /mnt/server/stk-assets"
+        }
+    },
+    "variables": [
+        {
+            "name": "服务器名称",
+            "description": "服务器名称",
+            "env_variable": "SERVER_NAME",
+            "default_value": "Pterodactyl_Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:50",
+            "field_type": "text"
+        },
+        {
+            "name": "配置文件名称",
+            "description": "配置文件的名称。",
+            "env_variable": "CONFIG_NAME",
+            "default_value": "config.xml",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:/^([\\w\\d._-]+)(\\.xml)$/",
+            "field_type": "text"
+        },
+        {
+            "name": "模式",
+            "description": "0 = 普通竞速\n1 = 计时赛\n2 = 对战\n3 = 足球\n4 = 跟随领队\n5 = 夺旗",
+            "env_variable": "MODE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:0,1,2,3,4,5",
+            "field_type": "text"
+        },
+        {
+            "name": "难度",
+            "description": "手推车的速度与AI难度  \n0 = 初学者  \n1 = 中级  \n2 = 专家  \n3 = SuperTux",
+            "env_variable": "DIFFICULTY",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:0,1,2,3",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "服务器最多能有多少玩家？",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "8",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|between:1,24",
+            "field_type": "text"
+        },
+        {
+            "name": "每日消息",
+            "description": "服务器中显示的每日消息。",
+            "env_variable": "MOTD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:100",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/197"
+},"egg-sven-co-op.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/120/download/egg-sven-co-op.json"
+    },
+    "exported_at": "2026-08-23T08:15:33+00:00",
+    "name": "Sven Co-op",
+    "author": "pteroducktyl@yildri.nl",
+    "description": "Sven Co-op 是一款基于 Valve Software 的《半条命》的合作游戏。在这款游戏中，玩家必须齐心协力对抗电脑控制的敌人，并作为团队解决谜题。",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:debian"
+    },
+    "file_denylist": [],
+    "startup": "./svends_run -console -port {{SERVER_PORT}} +maxplayers {{SC_PLAYERS}} +map {{SC_MAP}} +ip 0.0.0.0 -strictportbind -norestart",
+    "config": {
+        "files": "{\r\n    \"svencoop/server.cfg\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"hostname\": \"hostname \\\"{{env.SC_NAME}}\\\"\",\r\n            \"sv_password\": \"sv_password \\\"{{env.SC_PASSWORD}}\\\"\",\r\n            \"//sv_password\": \"sv_password \\\"{{env.SC_PASSWORD}}\\\"\",\r\n            \"sv_region\": \"sv_region {{env.SC_REGION}}\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"Connection to Steam servers successful.\"\r\n}",
+        "logs": "{}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n# Image to install with is 'registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian'\r\n\r\n##\r\n#\r\n# Variables\r\n# STEAM_USER, STEAM_PASS, STEAM_AUTH - Steam user setup. If a user has 2fa enabled it will most likely fail due to timeout. Leave blank for anon install.\r\n# WINDOWS_INSTALL - if it's a windows server you want to install set to 1\r\n# SRCDS_APPID - steam app id found here - https://developer.valvesoftware.com/wiki/Dedicated_Servers_List\r\n# SRCDS_BETAID - beta branch of a steam app. Leave blank to install normal branch\r\n# SRCDS_BETAPASS - password for a beta branch should one be required during private or closed testing phases.. Leave blank for no password.\r\n# INSTALL_FLAGS - Any additional SteamCMD  flags to pass during install.. Keep in mind that steamcmd auto update process in the docker image might overwrite or ignore these when it performs update on server boot.\r\n# AUTO_UPDATE - Adding this variable to the egg allows disabling or enabling automated updates on boot. Boolean value. 0 to disable and 1 to enable.\r\n#\r\n ##\r\n\r\n# Install packages. Default packages below are not required if using our existing install image thus speeding up the install process.\r\n#apt -y update\r\n#apt -y --no-install-recommends install curl lib32gcc-s1 ca-certificates\r\n\r\n## just in case someone removed the defaults.\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd /tmp\r\nmkdir -p /mnt/server/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steamcmd\r\nmkdir -p /mnt/server/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd /mnt/server/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root /mnt\r\nexport HOME=/mnt/server\r\n\r\n## install game using steamcmd\r\n./steamcmd.sh +force_install_dir /mnt/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) ${INSTALL_FLAGS} validate +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n\r\n## set up 32 bit libraries\r\n#mkdir -p /mnt/server/.steam/sdk32\r\n#cp -v linux32/steamclient.so ../.steam/sdk32/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk64\r\ncp -v linux64/steamclient.so ../.steam/sdk64/steamclient.so\r\n\r\n## add below your custom commands if needed\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "默认地图",
+            "description": "服务器的默认地图。",
+            "env_variable": "SC_MAP",
+            "default_value": "svencoop1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "服务器上同时可玩的最大玩家数量。",
+            "env_variable": "SC_PLAYERS",
+            "default_value": "12",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|between:2,32",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器名称",
+            "description": "你的服务器在Sven Co-op游戏内服务器列表中显示的名称。",
+            "env_variable": "SC_NAME",
+            "default_value": "Sven Co-op server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:40",
+            "field_type": "text"
+        },
+        {
+            "name": "密码",
+            "description": "加入服务器需要密码。留空以禁用。",
+            "env_variable": "SC_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "区域",
+            "description": "你的服务器所在区域。此设置用于Steam的服务器浏览器，以便玩家可以查找附近的服务器。这不会限制玩家连接到你的服务器。\n\n-1：不在服务器浏览器中列出服务器。\n0：美国东海岸。\n1：美国西海岸。\n2：南美洲（大陆）\n3：欧洲。\n4：亚洲。\n5：澳大利亚（大陆，即大洋洲）\n6：中东。\n7：非洲。\n255：国际。",
+            "env_variable": "SC_REGION",
+            "default_value": "255",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|between:-1,255",
+            "field_type": "text"
+        },
+        {
+            "name": "Source AppID",
+            "description": "游戏在服务器重启时更新所需。请勿修改此项。",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "276060",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/120"
+},"egg-tachyon.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/217/download/egg-tachyon.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:26+00:00",
+    "name": "Tachyon",
+    "author": "alex.chang-lam@protonmail.com",
+    "description": "FTL的多人游戏版本。",
+    "features": null,
+    "docker_images": {
+        "Java_11": "registry.cn-shanghai.aliyuncs.com/pterodactyl-china/yolks:java_11"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -XX:MaxRAMPercentage=95.0 -Dterminal.jline=false -Dterminal.ansi=true -jar TachyonsCEServer.jar",
+    "config": {
+        "files": "{\r\n    \"config.cfg\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"SERVER_PORT=\": \"SERVER_PORT={{server.build.default.port}}\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"[Server] SERVER STARTED.\"\r\n}",
+        "stop": "/exit"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n\r\napt update\r\napt install -y curl jq file unzip\r\n\r\nif [ ! -d /mnt/server/ ]; then\r\n    mkdir -p /mnt/server/\r\nfi\r\n\r\ncd /mnt/server/\r\n\r\n## get release info and download links\r\nLATEST_JSON=$(curl --silent \"https://api.github.com/repos/Dav-Edward/TachyonsCE/releases/latest\")\r\nRELEASES=$(curl --silent \"https://api.github.com/repos/Dav-Edward/TachyonsCE/releases\")\r\nMATCH=TachyonsCE\r\n\r\nif [ \"$(echo ${LATEST_JSON} | jq -r '.message')\" != \"Not Found\" ] && [[ -z \"${VERSION}\" || \"${VERSION}\" == \"latest\" ]]; then\r\n    echo -e \"grabbing latest version\"\r\n    DOWNLOAD_URL=$(echo ${LATEST_JSON} | jq .assets | jq -r .[].browser_download_url | grep -i ${MATCH})\r\nelif [ \"$(echo ${LATEST_JSON} | jq -r '.message')\" == \"Not Found\" ]; then\r\n    ## emergency fallback if latest isn't found\r\n    ## grabs the latest release even it it's a pre-release\r\n    echo -e \"grabbing latest pre-release\"\r\n    DOWNLOAD_URL=$(echo ${RELEASES} | jq -r '.[0].assets[].browser_download_url' | grep -i ${MATCH})\r\nelse\r\n    echo -e \"grabbing version $VERSION\"\r\n    VERSION_CHECK=$(echo ${RELEASES} | jq -r --arg VERSION \"${VERSION}\" '.[] | select(.tag_name==$VERSION) | .tag_name')\r\n    if [ \"${VERSION}\" == \"${VERSION_CHECK}\" ]; then\r\n        DOWNLOAD_URL=$(echo ${RELEASES} | jq -r --arg VERSION \"${VERSION}\" '.[] | select(.tag_name==$VERSION) | .assets[].browser_download_url' | grep -i ${MATCH})\r\n    else\r\n        echo -e \"defaulting to latest release\"\r\n        DOWNLOAD_URL=$(echo ${LATEST_JSON} | jq .assets | jq -r .[].browser_download_url)\r\n    fi\r\nfi\r\n\r\nif [ ! -z \"${DOWNLOAD_URL}\" ]; then \r\n    if curl --output /dev/null --silent --head --fail ${DOWNLOAD_URL}; then\r\n        echo -e \"link is valid. setting download link to ${DOWNLOAD_URL}\"\r\n        DOWNLOAD_LINK=${DOWNLOAD_URL}\r\n    else        \r\n        echo -e \"link is invalid closing out\"\r\n        exit 2\r\n    fi\r\nfi\r\n\r\ncurl --progress-bar -sSL -o ${DOWNLOAD_URL##*/} ${DOWNLOAD_URL}\r\n\r\nFILETYPE=$(file -F ',' ${DOWNLOAD_LINK##*/} | cut -d',' -f2 | cut -d' ' -f2)\r\nif [ \"$FILETYPE\" == \"gzip\" ]; then\r\n    tar xzvf ${DOWNLOAD_LINK##*/}\r\nelif [ \"$FILETYPE\" == \"Zip\" ]; then\r\n    unzip -o ${DOWNLOAD_LINK##*/}\r\nelif [ \"$FILETYPE\" == \"XZ\" ]; then\r\n    tar xvf ${DOWNLOAD_LINK##*/}\r\nelse\r\n    echo -e \"unknown filetype. Exeting\"\r\n    exit 2 \r\nfi\r\n\r\n#move all server files out\r\nmv ./server/* ./\r\n\r\n#remove zip and unneeded client-side and dev files\r\nrm -rf server/ JRE/ client/ *.zip\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "版本",
+            "description": "",
+            "env_variable": "VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:32",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/217"
+},"egg-teeworlds.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/248/download/egg-teeworlds.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:15+00:00",
+    "name": "Teeworlds",
+    "author": "parker@parkervcp.com",
+    "description": "Teeworlds 是一款免费的在线多人游戏，适用于所有主流操作系统。在多种游戏模式中与最多16名玩家对战，包括团队死亡竞赛和夺旗模式。你甚至可以设计自己的地图！",
+    "features": null,
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:debian"
+    },
+    "file_denylist": [],
+    "startup": "./teeworlds_srv",
+    "config": {
+        "files": "{\r\n    \"autoexec.cfg\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"bindaddr\": \"bindaddr 0.0.0.0\",\r\n            \"sv_port\": \"sv_port {{server.build.default.port}}\",\r\n            \"sv_name\": \"sv_name {{server.build.env.SERVER_NAME}}\",\r\n            \"sv_motd\": \"sv_motd {{server.build.env.SERVER_MOTD}}\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"as master, sending heartbeats\"\r\n}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "## teeworlds pterodactyl installer\r\napt update\r\napt upgrade -y\r\napt install -y curl jq file\r\n\r\nGITHUB_PACKAGE=\"teeworlds/teeworlds\"\r\nMATCH=\"linux_x86_64\"\r\n\r\nif [ ! -d /mnt/server ]; then\r\n    mkdir -p /mnt/server/\r\nfi\r\n\r\ncd /mnt/server\r\n\r\nif [ -z \"${GITHUB_USER}\" ] && [ -z \"${GITHUB_OAUTH_TOKEN}\" ] ; then\r\n    echo -e \"using anon api call\"\r\nelse\r\n    echo -e \"user and oauth token set\"\r\n    alias curl='curl -u ${GITHUB_USER}:${GITHUB_OAUTH_TOKEN} '\r\nfi\r\n\r\n## get release info and download links\r\nLATEST_JSON=$(curl --silent \"https://api.github.com/repos/${GITHUB_PACKAGE}/releases/latest\")\r\nRELEASES=$(curl --silent \"https://api.github.com/repos/${GITHUB_PACKAGE}/releases\")\r\n\r\nif [ -z \"${VERSION}\" ] || [ \"${VERSION}\" == \"latest\" ]; then\r\n    DOWNLOAD_LINK=$(echo ${LATEST_JSON} | jq .assets | jq -r .[].browser_download_url | grep -i ${MATCH})\r\nelse\r\n    VERSION_CHECK=$(echo ${RELEASES} | jq -r --arg VERSION \"${VERSION}\" '.[] | select(.tag_name==$VERSION) | .tag_name')\r\n    if [ \"${VERSION}\" == \"${VERSION_CHECK}\" ]; then\r\n        DOWNLOAD_LINK=$(echo ${RELEASES} | jq -r --arg VERSION \"${VERSION}\" '.[] | select(.tag_name==$VERSION) | .assets[].browser_download_url' | grep -i ${MATCH})\r\n    else\r\n        echo -e \"defaulting to latest release\"\r\n        DOWNLOAD_LINK=$(echo ${LATEST_JSON} | jq .assets | jq -r .[].browser_download_url)\r\n    fi\r\nfi\r\n\r\nif [ ! -z \"${DOWNLOAD_URL}\"]; then \r\n    if curl --output /dev/null --silent --head --fail ${DOWNLOAD_URL}; then\r\n        echo -e \"link is valid. setting download link to ${DOWNLOAD_URL}\"\r\n        DOWNLOAD_LINK=${DOWNLOAD_URL}\r\n    else        \r\n        echo -e \"link is invalid closing out\"\r\n        exit 2\r\n    fi\r\nfi\r\n\r\n## setting variable names for later\r\nFILE_NAME=${DOWNLOAD_LINK##*/}\r\nFOLDER_NAME=${FILE_NAME%.tar.gz}\r\n\r\necho -e \"running 'curl -sSL ${DOWNLOAD_LINK} -o ${FILE_NAME}'\"\r\ncurl -sSL ${DOWNLOAD_LINK} -o ${FILE_NAME}\r\n\r\nFILETYPE=$(file -F ',' ${FILE_NAME} | cut -d',' -f2 | cut -d' ' -f2)\r\nif [ \"$FILETYPE\" == \"gzip\" ]; then\r\n    tar xzvf ${FILE_NAME}\r\nelif [ \"$FILETYPE\" == \"Zip\" ]; then\r\n    unzip ${FILE_NAME}\r\nelif [ \"$FILETYPE\" == \"XZ\" ]; then\r\n    tar xvf ${FILE_NAME}\r\nelse\r\n    echo -e \"unknown filetype. Exiting\"\r\n    # exit 2 \r\nfi\r\n\r\n## cleanup old files\r\nmv ${FOLDER_NAME}/* ./\r\n\r\nrm -rf ${FILE_NAME} ${FOLDER_NAME}\r\n\r\n## download default config\r\nif [ ! -f /mnt/server/autoexec.cfg ]; then\r\n    curl -sSL https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/teeworlds/autoexec.cfg > /mnt/server/autoexec.cfg\r\nfi\r\n\r\n## download safe storage file\r\n## overwrites any that exists.\r\ncurl -sSL https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/teeworlds/storage.cfg > /mnt/server/storage.cfg\r\n\r\necho -e \"Install complete.\""
+        }
+    },
+    "variables": [
+        {
+            "name": "服务器名称",
+            "description": "服务器的显示名称",
+            "env_variable": "SERVER_NAME",
+            "default_value": "A Pterodactyl Hosted Teeworlds Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器MotD",
+            "description": "显示给所有用户的每日服务器消息。",
+            "env_variable": "SERVER_MOTD",
+            "default_value": "A Pterodactyl Hosted Teeworlds Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/248"
+},"egg-terratech-worlds.json":{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/123/download/egg-terratech-worlds.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:15:34+00:00",
+    "name": "TerraTech Worlds",
+    "author": "durzo@durzo.io",
+    "description": "TerraTech Worlds",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "Proton": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:proton"
+    },
+    "file_denylist": [],
+    "startup": "rm /home/container/TT2/Saved/Logs/TT2.log; proton run ./TT2/Binaries/Win64/TT2Server-Win64-Shipping.exe -log & TTW_PID=$!; tail -c0 -F /home/container/TT2/Saved/Logs/TT2.log --pid=$TTW_PID",
+    "config": {
+        "files": "{\r\n    \"dedicated_server_config.json\": {\r\n        \"parser\": \"json\",\r\n        \"find\": {\r\n            \"Port\": \"{{server.build.default.port}}\",\r\n            \"Password\": \"{{server.build.env.SERVER_PASSWORD}}\",\r\n            \"SlotCount\": \"{{server.build.env.MAX_PLAYERS}}\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Waiting Players...\"\r\n}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n# Image to install with is 'registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian'\r\n\r\n\r\n# Install packages. Default packages below are not required if using our existing install image thus speeding up the install process.\r\n#apt -y update\r\n#apt -y --no-install-recommends install curl lib32gcc-s1 ca-certificates\r\n\r\n## just in case someone removed the defaults.\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd /tmp\r\nmkdir -p /mnt/server/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steamcmd\r\nmkdir -p /mnt/server/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd /mnt/server/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root /mnt\r\nexport HOME=/mnt/server\r\n\r\n## install game using steamcmd\r\n./steamcmd.sh +force_install_dir /mnt/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) ${INSTALL_FLAGS} validate +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n\r\n## install the steam sdk using steamcmd\r\n./steamcmd.sh +force_install_dir /mnt/server/TT2/Binaries/Win64/ +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update 1007 ${INSTALL_FLAGS} validate +quit \r\n\r\n## set up 32 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk32\r\ncp -v linux32/steamclient.so ../.steam/sdk32/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk64\r\ncp -v linux64/steamclient.so ../.steam/sdk64/steamclient.so\r\n\r\n#Setup AppID TXT\r\ncd /mnt/server\r\necho \"2313330\" > steam_appid.txt\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "应用ID",
+            "description": "服务器下载/更新所需的应用程序ID。最终用户不应看到此信息。",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "2533070",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|integer|in:2533070",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器密码",
+            "description": "进入服务器所需的密码，留空则为公共服务器",
+            "env_variable": "SERVER_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|alpha_dash|max:128",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "指定服务器允许的最大玩家数量。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "6",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|min:1|max:6",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 使用 Windows 分支",
+            "description": "告知安装程序/更新程序仅下载服务器的Windows分支（目前唯一可用的分支），以便其能在Wine上运行。此设置不可更改。",
+            "env_variable": "WINDOWS_INSTALL",
+            "default_value": "1",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:1",
+            "field_type": "text"
+        },
+        {
+            "name": "自动更新",
+            "description": "启动时自动更新服务器。",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/123"
+}}}
