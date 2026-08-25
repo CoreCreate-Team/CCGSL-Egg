@@ -1,0 +1,95 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/120/download/egg-sven-co-op.json"
+    },
+    "exported_at": "2026-08-23T08:15:33+00:00",
+    "name": "Sven Co-op",
+    "author": "pteroducktyl@yildri.nl",
+    "description": "Sven Co-op 是一款基于 Valve Software 的《半条命》的合作游戏。在这款游戏中，玩家必须齐心协力对抗电脑控制的敌人，并作为团队解决谜题。",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:debian"
+    },
+    "file_denylist": [],
+    "startup": "./svends_run -console -port {{SERVER_PORT}} +maxplayers {{SC_PLAYERS}} +map {{SC_MAP}} +ip 0.0.0.0 -strictportbind -norestart",
+    "config": {
+        "files": "{\r\n    \"svencoop/server.cfg\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"hostname\": \"hostname \\\"{{env.SC_NAME}}\\\"\",\r\n            \"sv_password\": \"sv_password \\\"{{env.SC_PASSWORD}}\\\"\",\r\n            \"//sv_password\": \"sv_password \\\"{{env.SC_PASSWORD}}\\\"\",\r\n            \"sv_region\": \"sv_region {{env.SC_REGION}}\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"Connection to Steam servers successful.\"\r\n}",
+        "logs": "{}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n# Image to install with is 'registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian'\r\n\r\n##\r\n#\r\n# Variables\r\n# STEAM_USER, STEAM_PASS, STEAM_AUTH - Steam user setup. If a user has 2fa enabled it will most likely fail due to timeout. Leave blank for anon install.\r\n# WINDOWS_INSTALL - if it's a windows server you want to install set to 1\r\n# SRCDS_APPID - steam app id found here - https://developer.valvesoftware.com/wiki/Dedicated_Servers_List\r\n# SRCDS_BETAID - beta branch of a steam app. Leave blank to install normal branch\r\n# SRCDS_BETAPASS - password for a beta branch should one be required during private or closed testing phases.. Leave blank for no password.\r\n# INSTALL_FLAGS - Any additional SteamCMD  flags to pass during install.. Keep in mind that steamcmd auto update process in the docker image might overwrite or ignore these when it performs update on server boot.\r\n# AUTO_UPDATE - Adding this variable to the egg allows disabling or enabling automated updates on boot. Boolean value. 0 to disable and 1 to enable.\r\n#\r\n ##\r\n\r\n# Install packages. Default packages below are not required if using our existing install image thus speeding up the install process.\r\n#apt -y update\r\n#apt -y --no-install-recommends install curl lib32gcc-s1 ca-certificates\r\n\r\n## just in case someone removed the defaults.\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd /tmp\r\nmkdir -p /mnt/server/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steamcmd\r\nmkdir -p /mnt/server/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd /mnt/server/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root /mnt\r\nexport HOME=/mnt/server\r\n\r\n## install game using steamcmd\r\n./steamcmd.sh +force_install_dir /mnt/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) ${INSTALL_FLAGS} validate +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n\r\n## set up 32 bit libraries\r\n#mkdir -p /mnt/server/.steam/sdk32\r\n#cp -v linux32/steamclient.so ../.steam/sdk32/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk64\r\ncp -v linux64/steamclient.so ../.steam/sdk64/steamclient.so\r\n\r\n## add below your custom commands if needed\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "默认地图",
+            "description": "服务器的默认地图。",
+            "env_variable": "SC_MAP",
+            "default_value": "svencoop1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "服务器上同时可玩的最大玩家数量。",
+            "env_variable": "SC_PLAYERS",
+            "default_value": "12",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|between:2,32",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器名称",
+            "description": "你的服务器在Sven Co-op游戏内服务器列表中显示的名称。",
+            "env_variable": "SC_NAME",
+            "default_value": "Sven Co-op server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:40",
+            "field_type": "text"
+        },
+        {
+            "name": "密码",
+            "description": "加入服务器需要密码。留空以禁用。",
+            "env_variable": "SC_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "区域",
+            "description": "你的服务器所在区域。此设置用于Steam的服务器浏览器，以便玩家可以查找附近的服务器。这不会限制玩家连接到你的服务器。\n\n-1：不在服务器浏览器中列出服务器。\n0：美国东海岸。\n1：美国西海岸。\n2：南美洲（大陆）\n3：欧洲。\n4：亚洲。\n5：澳大利亚（大陆，即大洋洲）\n6：中东。\n7：非洲。\n255：国际。",
+            "env_variable": "SC_REGION",
+            "default_value": "255",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|between:-1,255",
+            "field_type": "text"
+        },
+        {
+            "name": "Source AppID",
+            "description": "游戏在服务器重启时更新所需。请勿修改此项。",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "276060",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/120"
+}

@@ -1,0 +1,60 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/188/download/egg-waterdog.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:05+00:00",
+    "name": "Waterdog",
+    "author": "parker@pterodactyl.io",
+    "description": "Waterdog 是著名的 Waterfall 的一个分支，而 Waterfall 又是著名的 BungeeCord 服务器传送套件的一个分支。",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Listening on \"\r\n}",
+        "stop": "end"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n\r\nif [ ! -d /mnt/server ]; then\r\n    mkdir /mnt/server\r\nfi\r\n\r\ncd /mnt/server\r\n\r\n# Adding '.jar' if it isn't part of the file name\r\nif [[ \"${SERVER_JARFILE}\" == \"*\\.jar\" ]]; then\r\n    echo -e \"adding.jar to server file name\"\r\n    SERVER_JARFILE=\"${SERVER_JARFILE}.jar\"\r\nfi\r\n\r\nif [ -z \"${WATERDOG_VERSION}\" ] || [ \"${WATERDOG_VERSION}\" == \"latest\" ]; then\r\n    echo -e \"downloading latest waterdog build\\n\"\r\n    curl -sSL -o ${SERVER_JARFILE} https://jenkins.waterdog.dev/job/Waterdog/job/Waterdog/job/master-zlib/lastSuccessfulBuild/artifact/Waterfall-Proxy/bootstrap/target/Waterdog.jar\r\nelse \r\n    echo -e \"downloading waterdog build ${WATERDOG_VERSION}\\n\"\r\n    curl -sSL -o ${SERVER_JARFILE} https://jenkins.waterdog.dev/job/Waterdog/job/Waterdog/job/master-zlib/${WATERDOG_VERSION}/artifact/Waterfall-Proxy/bootstrap/target/Waterdog.jar\r\nfi\r\n\r\nif [ ! -f config.yml ]; then\r\n    echo -e \"Downloading waterfall config.yml\"\r\n   curl -o config.yml https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/minecraft/proxy/java/waterfall/config.yml\r\nelse\r\n    echo -e \"Waterfall config.yml exists. Will not pull a new file\"\r\nfi\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "Waterdog 版本",
+            "description": "要拉取并安装的构建版本。（例如：23），或设置为 latest  \n\n这是 https://jenkins.waterdog.dev/ 上的构建编号。",
+            "env_variable": "WATERDOG_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器Jar文件",
+            "description": "要运行的jar文件",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "server.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/188"
+}

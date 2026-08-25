@@ -1,0 +1,73 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/234/download/egg-nazi-zombies-portable.json"
+    },
+    "exported_at": "2026-08-23T08:16:18+00:00",
+    "name": "Nazi Zombies: Portable",
+    "author": "jordanadamsbusiness@outlook.com",
+    "description": "NZ:P (Nazi Zombies: Portable) 基于 FTEQW（Fore Thought Engine Quake World）。此 egg 专为 NZ:P 设计（仅从 NZ:P 仓库下载资源文件和 QuakeC），但您也可以将其用作通用的 FTEQW egg，因为 NZ:P 对 FTEQW 的分支仅向客户端添加了雾效（并添加了 SDL，这导致参数被吞噬，阻止了专用标志的读取），因此我们使用了上游的 FTEQW。",
+    "features": null,
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:ubuntu": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:ubuntu"
+    },
+    "file_denylist": [],
+    "startup": "./fteqw-sv64 -dedicated +sv_port {{SERVER_PORT}} +sv_port_tcp {{SERVER_PORT}} +com_protocolname {{PROTOCOL}} +sv_mintic {{TICKRATE}} +map {{MAP}} {{GAME_ARGS}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"======== Nazi Zombies Portable Initialized ========\"\r\n}",
+        "logs": "{}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/ash\r\n# Nazi Zombies: Portable (NZ:P) Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n\r\n# FTEQW (Engine)\r\nwget https://www.fteqw.org/dl/fteqw_linux64.zip\r\nunzip -o fteqw_linux64.zip -d /mnt/server\r\n\r\n# Assets\r\nASSETS_LATEST_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/nzp-team/assets/releases/latest | jq -r '.tag_name')\r\nwget \"https://github.com/nzp-team/assets/releases/download/$ASSETS_LATEST_VERSION/pc-nzp-assets.zip\"\r\nunzip -o pc-nzp-assets.zip -d /mnt/server\r\n\r\n# QuakeC\r\nQUAKEC_LATEST_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/nzp-team/quakec/releases/latest | jq -r '.tag_name')\r\nwget \"https://github.com/nzp-team/quakec/releases/download/$QUAKEC_LATEST_VERSION/fte-nzp-qc.zip\"\r\nwget \"https://github.com/nzp-team/quakec/releases/download/$QUAKEC_LATEST_VERSION/standard-nzp-qc.zip\"\r\nunzip -o fte-nzp-qc.zip -d /mnt/server/nzp\r\nunzip -o standard-nzp-qc.zip -d /mnt/server/nzp",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:alpine",
+            "entrypoint": "ash"
+        }
+    },
+    "variables": [
+        {
+            "name": "协议",
+            "description": "NZ:P 原生客户端 - `NZP-REBOOT`。  \nNZ:P 网页客户端 - `NZP-REBOOT-WEB`。  \n\n按下键盘上的 `/~` 键，这将打开控制台，然后对于原生客户端，你需要输入 `connect ip:port`；对于网页客户端，你需要输入 `connect ws://ip:port`。此外，你必须确保你所玩的网页客户端所在的网站使用的是 HTTP 版本，否则浏览器将阻止该请求。",
+            "env_variable": "PROTOCOL",
+            "default_value": "NZP-REBOOT",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:50",
+            "field_type": "text"
+        },
+        {
+            "name": "刻速率",
+            "description": "可以将其理解为fps，默认值为每45毫秒（0.045秒）1帧，即约22 fps；30 fps约为33.3毫秒，60 fps约为16.6毫秒。tick率较低的原因是僵尸会占用大量带宽（尤其是在较高回合时），调整此数值需谨慎。但如果提高tick率，可能会修复僵尸卡在地形上的物理错误。",
+            "env_variable": "TICKRATE",
+            "default_value": "0.045",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "地图",
+            "description": "要加载的地图，你可以通过`listmaps`查看列表，默认地图是ndu，也称为\"Nacht der Untoten\"。",
+            "env_variable": "MAP",
+            "default_value": "ndu",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "附加游戏参数",
+            "description": "`+cvar value` 是更改 cvars 的格式。",
+            "env_variable": "GAME_ARGS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "max:200",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/234"
+}

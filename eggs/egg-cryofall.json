@@ -1,0 +1,55 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/42/download/egg-cryofall.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:15:55+00:00",
+    "name": "CryoFall",
+    "author": "contact@zennodes.dk",
+    "description": "注意：目前你需要手动修改 `CryoFall_Server_v(版本)_NetCore/Data/SettingsServer.xml` 文件中的设置。\n\n《CryoFall》是一款科幻题材的多人殖民地模拟生存游戏，故事背景设定在遥远未来的一颗被遗忘的星球上。\n\n与其他幸存者一同加入《CryoFall》的广阔世界，从零开始重建你的文明。从原始科技和简单工具起步，逐步迈向现代工业力量乃至更高层次，最终达到科幻作品中才有的太空时代科技。\n\n《CryoFall》既可以作为轻松无竞争的 PvE 体验游玩，也可以作为残酷无情的 PvP 挑战。做出你的选择，加入众多提供不同游戏模式的服务器，或者自己搭建服务器并邀请朋友加入！\n\n建造你的房屋或与其他玩家共建大型基地。挖掘水井、创建农场以满足基本生存需求。制造载具以更快探索世界。建立科学基础，从医学、化学到燃料制造，甚至提取锂元素来制造电子设备。烹饪食物或调制饮品，通过商店中的自动售货机出售。\n\n建造工厂实现工业化生产：武器与防御系统、用于强化自身的仿生植入体，甚至用于对抗最强大敌人的大型战争机器和火炮。",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:dotnet_6": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:dotnet_6"
+    },
+    "file_denylist": [],
+    "startup": "dotnet Binaries/Server/CryoFall_Server.dll loadOrNew",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"[IMP] UDPServer: Socket-server listening on \"\r\n}",
+        "stop": "stop 10 stopping server"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n# Image to install with is 'debian:buster-slim'\r\n\r\n##\r\n#\r\n# Variables\r\n# STEAM_USER, STEAM_PASS, STEAM_AUTH - Steam user setup. If a user has 2fa enabled it will most likely fail due to timeout. Leave blank for anon install.\r\n# WINDOWS_INSTALL - if it's a windows server you want to install set to 1\r\n# SRCDS_APPID - steam app id ffound here - https://developer.valvesoftware.com/wiki/Dedicated_Servers_List\r\n# INSTALL_FLAGS - when a server has extra glas for things like beta installs or updates.\r\n#\r\n##\r\n\r\n## just in case someone removed the defaults.\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd /tmp\r\nmkdir -p /mnt/server/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steamcmd\r\nmkdir -p /mnt/server/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd /mnt/server/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root /mnt\r\nexport HOME=/mnt/server\r\n\r\n## install game using steamcmd\r\n./steamcmd.sh +force_install_dir /mnt/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) ${INSTALL_FLAGS} validate +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n\r\n## set up 32 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk32\r\ncp -v linux32/steamclient.so ../.steam/sdk32/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk64\r\ncp -v linux64/steamclient.so ../.steam/sdk64/steamclient.so\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "SRCDS_APPID",
+            "description": "",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "1061710",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:1061710",
+            "field_type": "text"
+        },
+        {
+            "name": "自动更新",
+            "description": "启动时自动更新服务器。",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/42"
+}

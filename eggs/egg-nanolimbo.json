@@ -1,0 +1,67 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/167/download/egg-nanolimbo.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:01+00:00",
+    "name": "NanoLimbo",
+    "author": "mail@wuffy.eu",
+    "description": "这是一个轻量级的Minecraft Limbo服务器，使用Java和Netty编写。该项目的主要目标是以最少的发送和处理数据包实现最大程度的简洁性。此Limbo服务器是空的，没有设置建筑蓝图的功能，因为这不是必需的。您可以在聊天或BossBar中发送有用的信息。\n\n没有插件，没有日志。服务器完全纯净。它仅能在主服务器宕机时保持大量玩家的连接。",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{\r\n    \"settings.yml\": {\r\n        \"parser\": \"yaml\",\r\n        \"find\": {\r\n            \"bind.ip\": \"0.0.0.0\",\r\n            \"bind.port\": \"{{server.build.default.port}}\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Server started on\"\r\n}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n# NanoLimbo Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n\r\napt update\r\napt install -y curl jq git openssl bash bc apt-transport-https gnupg software-properties-common\r\n\r\nif [ -z \"${DOWNLOAD_URL}\" ]; then\r\n    GITHUB_PACKAGE=\"Nan1t/NanoLimbo\"\r\n    MATCH=\"NanoLimbo-\"\r\n\r\n    ## get release info and download links\r\n    LATEST_JSON=$(curl --silent \"https://api.github.com/repos/${GITHUB_PACKAGE}/releases/latest\")\r\n    RELEASES=$(curl --silent \"https://api.github.com/repos/${GITHUB_PACKAGE}/releases\")\r\n    \r\n    if [ -z \"${VERSION}\" ] || [ \"${VERSION}\" == \"latest\" ]; then\r\n        DOWNLOAD_URL=$(echo ${LATEST_JSON} | jq .assets | jq -r .[].browser_download_url | grep -i ${MATCH})\r\n    else\r\n        VERSION_CHECK=$(echo ${RELEASES} | jq -r --arg VERSION \"${VERSION}\" '.[] | select(.tag_name==$VERSION) | .tag_name')\r\n        if [ \"${VERSION}\" == \"${VERSION_CHECK}\" ]; then\r\n            DOWNLOAD_URL=$(echo ${RELEASES} | jq -r --arg VERSION \"${VERSION}\" '.[] | select(.tag_name==$VERSION) | .assets[].browser_download_url' | grep -i ${MATCH})\r\n        else\r\n            echo -e \"defaulting to latest release\"\r\n            DOWNLOAD_URL=$(echo ${LATEST_JSON} | jq .assets | jq -r .[].browser_download_url)\r\n        fi\r\n    fi\r\nelse\r\n    if curl --output /dev/null --silent --head --fail ${DOWNLOAD_URL}.jar; then\r\n        echo -e \"Provided download link is valid. Proceeding to download\"\r\n    else\r\n        echo -e \"Provided download link is invalid. Exiting now\"\r\n        exit 2\r\n    fi\r\nfi\r\n\r\ncd /mnt/server\r\n\r\necho \"Downloading server file...\"\r\necho -e \"performing curl -sSL ${DOWNLOAD_URL}\"\r\ncurl -sSL -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\r\n\r\nif [ ! -f \"settings.yml\" ]; then\r\necho \"Creating settings file...\"\r\ncurl -sSL -o settings.yml https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/minecraft/java/nanolimbo/settings.yml\r\nfi\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "服务器JAR文件",
+            "description": "用于运行服务器的服务器jar文件名。",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "server.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:/^([\\w\\d._-]+)(\\.jar)$/",
+            "field_type": "text"
+        },
+        {
+            "name": "下载链接",
+            "description": "用于下载的URL。  \n此为可选项！留空此字段将使用最新版本。",
+            "env_variable": "DOWNLOAD_URL",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "版本",
+            "description": "要下载的NanoLimbo版本。使用\"latest\"获取最新版本。",
+            "env_variable": "VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/167"
+}

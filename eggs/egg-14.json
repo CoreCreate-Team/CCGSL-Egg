@@ -1,0 +1,75 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/246/download/egg-space-station-14.json"
+    },
+    "exported_at": "2026-08-23T08:16:16+00:00",
+    "name": "Space Station 14",
+    "author": "josdekurk@gmail.com",
+    "description": "Space Station 14 讲述了一个空间站普通轮班出现问题的故事。沉浸在你的角色中，修补复杂的系统，在这款回合制多人角色扮演游戏中于混乱中生存。",
+    "features": null,
+    "docker_images": {
+        "Dotnet 10": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:dotnet_10",
+        "Dotnet 9": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:dotnet_9",
+        "Dotnet 8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:dotnet_8"
+    },
+    "file_denylist": [],
+    "startup": "./Robust.Server",
+    "config": {
+        "files": "{\n    \"server_config.toml\": {\n        \"parser\": \"file\",\n        \"find\": {\n            \"port\": \"port = {{server.build.default.port}}\",\n            \"hostname\": \"hostname = \\\"{{server.build.env.SERVER_NAME}}\\\"\",\n            \"tickrate\": \"tickrate = {{server.build.env.SERVER_TICK}}\",\n            \"max_connections\": \"max_connections = {{server.build.env.SERVER_MAX_PLAYERS}}\",\n            \"mode\": \"mode = {{server.build.env.SERVER_AUTH}\"\n        }\n    }\n}",
+        "startup": "{\n    \"done\": \"Server Version\"\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\n\r\nARCH=$([[ \"$(uname -m)\" == \"x86_64\" ]] && echo \"x64\" || echo \"arm64\")\r\nV=$(curl -sSL https://wizards.cdn.spacestation14.com/fork/wizards | grep \".Server_linux\" | grep -i ${ARCH} | head -1 | awk '{print $2}' | sed 's/^href=\"//;s/\">Linux//')\r\n\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\n\r\necho \"Running: curl -sSL -o server_linux.zip https://wizards.cdn.spacestation14.com${V}\"\r\ncurl -sSL -o server_linux.zip \"https://wizards.cdn.spacestation14.com${V}\"\r\nunzip -o server_linux.zip\r\nrm server_linux.zip\r\n\r\nchmod +x Robust.Server\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "身份验证",
+            "description": "强制进行身份验证，使得所有连接的客户端都必须拥有有效的账户。\n可选值：0（可选）、1（必需）、2（禁用）。",
+            "env_variable": "SERVER_AUTH",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|in:0,1,2",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "",
+            "env_variable": "SERVER_MAX_PLAYERS",
+            "default_value": "256",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|between:1,256",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器名称",
+            "description": "更改服务器在大厅和启动器中显示的名称。",
+            "env_variable": "SERVER_NAME",
+            "default_value": "MyServer",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:48",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器刻率",
+            "description": "服务器的刻率。默认为60。",
+            "env_variable": "SERVER_TICK",
+            "default_value": "60",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|between:1,80",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/246"
+}

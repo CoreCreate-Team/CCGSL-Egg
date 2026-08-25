@@ -1,0 +1,285 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/22/download/egg-arma-3.json"
+    },
+    "exported_at": "2026-08-23T08:15:48+00:00",
+    "name": "Arma 3",
+    "author": "red_thirten@yahoo.com",
+    "description": "在庞大的军事沙盒中体验真实的战斗玩法。部署丰富多样的单人及多人内容，超过20种载具与40种武器，以及无限的内容创作可能，这就是PC平台首屈一指的军事游戏。真实、多元、开放——《武装突袭3》带你奔赴战场。",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/games:arma3": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/games:arma3"
+    },
+    "file_denylist": [],
+    "startup": "./{{SERVER_BINARY}} -par=startup_params_server.txt",
+    "config": {
+        "files": "{\r\n    \"server.cfg\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"password=\": \"password = \\\"{{server.build.env.SERVER_PASSWORD}}\\\";\",\r\n            \"//password=\": \"password = \\\"{{server.build.env.SERVER_PASSWORD}}\\\";\",\r\n            \"password =\": \"password = \\\"{{server.build.env.SERVER_PASSWORD}}\\\";\",\r\n            \"//password =\": \"password = \\\"{{server.build.env.SERVER_PASSWORD}}\\\";\",\r\n            \"maxPlayers\": \"maxPlayers = {{server.build.env.MAX_PLAYERS}};\",\r\n            \"headlessClients\": \"headlessClients[] = { \\\"127.0.0.1\\\" };\",\r\n            \"localClient\": \"localClient[] = { \\\"127.0.0.1\\\" };\"\r\n        }\r\n    },\r\n    \"battleye/launch/beserver.cfg\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"RConPassword\": \"RConPassword {{server.build.env.RCON_PASSWORD}}\",\r\n            \"RConPort\": \"RConPort {{server.build.env.RCON_PORT}}\"\r\n        }\r\n    },\r\n    \"battleye/launch/beserver_x64.cfg\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"RConPassword\": \"RConPassword {{server.build.env.RCON_PASSWORD}}\",\r\n            \"RConPort\": \"RConPort {{server.build.env.RCON_PORT}}\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"Host identity created.\"\r\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\n\r\n## File: Pterodactyl Arma 3 Egg - egg-pterodactyl-arma3.json\r\n## Author: David Wolfe (Red-Thirten)\r\n## Date: 2025/10/06\r\n## License: MIT License\r\n## Image to install with is 'registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian'\r\n\r\n# Download URL for a default Arma 3 server.cfg\r\n# (Feel free to modify to your own preferred, self-hosted file if you wish)\r\nSERVER_CFG_URL=\"https://raw.githubusercontent.com/pelican-eggs/games-steamcmd/main/arma/arma3/egg-arma3-config/server.cfg\"\r\n\r\n# Install packages. Default packages below are skipped if using image noted above, thus speeding up the install process.\r\napt -y update\r\napt -y --no-install-recommends install curl lib32gcc-s1 ca-certificates\r\n\r\n# Check for valid Steam credentials to download Arma 3 with (requires valid Steam account)\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_USER}\" == \"anonymous\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"INSTALLATION ERROR: A valid REAL Steam account is required to download the Arma 3 Dedicated Server.\"\r\n    echo -e \"\\t(\\\"anonymous\\\" account cannot be used. Game ownership is not required.)\"\r\n    exit 1\r\nfi\r\n\r\n# Download and install SteamCMD\r\ncd /tmp\r\nmkdir -p /mnt/server/steamcmd /mnt/server/steamapps\r\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steamcmd\r\ncd /mnt/server/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\nchown -R root:root /mnt\r\nexport HOME=/mnt/server\r\n\r\n# Install game server using SteamCMD\r\necho -e \"\\nInstalling/Validating Arma 3 Dedicated Server Files...\"\r\necho -e \"(It is okay to ignore any \\\"SDL\\\", \\\"steamservice\\\", and \\\"thread priority\\\" errors during this process)\"\r\nif [[ -n ${STEAMCMD_BETAID} ]]; then\r\n    echo -e \"\\tDownload/Update of \\\"${STEAMCMD_BETAID}\\\" branch enabled.\"\r\nfi\r\necho -e \"\"\r\n./steamcmd.sh +force_install_dir /mnt/server \"+login \\\"${STEAM_USER}\\\" \\\"${STEAM_PASS}\\\"\" +app_update ${STEAMCMD_APPID} $( [[ -n ${STEAMCMD_BETAID} ]] && printf %s \"-beta ${STEAMCMD_BETAID}\" ) validate +quit\r\n\r\n# Set up 32 and 64 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk{32,64}\r\ncp -v linux32/steamclient.so /mnt/server/.steam/sdk32/steamclient.so\r\ncp -v linux64/steamclient.so /mnt/server/.steam/sdk64/steamclient.so\r\n\r\n# Arma 3 setup\r\ncd /mnt/server/\r\n[[ -f server.cfg ]] || curl -sSLO ${SERVER_CFG_URL} # Download default server.cfg file\r\n[[ -f basic.cfg ]] || curl -sSLO ${BASIC_CFG_URL} # Download default basic.cfg file\r\nchmod 644 server.cfg basic.cfg\r\nmkdir -p ./battleye/launch # Create BattlEye config files\r\ntee ./battleye/launch/beserver.cfg ./battleye/launch/beserver_x64.cfg > /dev/null <<EOF\r\nRConPassword $RCON_PASSWORD\r\nRConPort $RCON_PORT\r\nEOF\r\n\r\nif [[ -f \"arma3server_x64\" && -f \"server.cfg\" && -f \"basic.cfg\" ]]; then\r\n    echo -e \"\\nArma 3 Dedicated Server successfully installed!\\n\"\r\nelse\r\n    echo -e \"\\n\\nFailed to install the Arma 3 Dedicated Server!\"\r\n    echo -e \"\\tReview the installation logs for any errors before trying again.\\n\"\r\n    exit 1\r\nfi",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "/bin/bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "[主机] Steam 用户名",
+            "description": "用于安装和更新。该账户无需拥有《武装突袭3》，但必须是有效的Steam账户（不能使用匿名登录）。出于安全考虑，建议你为专用服务器创建一个新的Steam账户。*此信息对服务器所有者不可见。*",
+            "env_variable": "STEAM_USER",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "[主机] Steam 密码",
+            "description": "用于安装和更新。Steam Guard 必须完全关闭才能成功完成安装。*此信息对服务器所有者不可见，但会以纯文本形式存储。不建议使用个人账户；最好使用虚拟账户。*",
+            "env_variable": "STEAM_PASS",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "[主机] SteamCMD 重试尝试次数",
+            "description": "在可恢复错误后，SteamCMD 应重试下载服务器或模组的次数。（例如，像 CUP 或 RHS 这样特别大的模组下载超时）",
+            "env_variable": "STEAMCMD_ATTEMPTS",
+            "default_value": "3",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|integer",
+            "field_type": "text"
+        },
+        {
+            "name": "[主机] RCon 端口",
+            "description": "BattlEye的RCon端口，用于与兼容Arma 3的RCon客户端/工具进行远程连接。若设置为0，则禁用远程连接。（注意：此端口与“BattlEye流量”端口不同，且必须唯一）",
+            "env_variable": "RCON_PORT",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|integer|between:0,65536",
+            "field_type": "text"
+        },
+        {
+            "name": "自动更新",
+            "description": "启动时快速检查服务器或模组更新，并在必要时进行更新。（1 启用 | 0 禁用）",
+            "env_variable": "UPDATE_SERVER",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "Arma 3 分支（CDLC 等）",
+            "description": "在服务器安装或下次自动更新期间，下载/更新特定的 Arma 3 分支。\"public\" 是默认分支。\"creatordlc\" 将安装运行任何创作者 DLC（CDLC）所需的所有模组文件。CDLC 可通过将其模组文件夹名称添加到\"附加模组\"启动变量来启用。例如，添加 \"vn;\" 以加载 Prairie Fire CDLC。\"profiling\" 用于运行服务器的特殊性能分析构建版本。",
+            "env_variable": "STEAMCMD_BETAID",
+            "default_value": "public",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:public,creatordlc,profiling",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器二进制文件",
+            "description": "服务器启动时调用的服务器二进制文件。（32位：arma3server | 64位：arma3server_x64）",
+            "env_variable": "SERVER_BINARY",
+            "default_value": "arma3server_x64",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:arma3server,arma3server_x64,arma3serverprofiling,arma3serverprofiling_x64",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "服务器允许的最大玩家数量。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "32",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|gt:0",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器密码",
+            "description": "加入服务器需要密码。留空则无需密码。",
+            "env_variable": "SERVER_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "模组列表文件（从A3启动器导出）",
+            "description": "从 Arma 3 启动器导出的模组列表文件名。此文件将被解析以安装和加载模组。请将您的 HTML 文件上传至根目录（例如 /home/container/modlist.html）。留空则禁用从模组列表加载模组。",
+            "env_variable": "MOD_FILE",
+            "default_value": "modlist.html",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "额外模组",
+            "description": "以分号分隔的额外模组文件夹列表，用于加载CDLC或手动上传的模组。此模组列表将作为模组列表文件（若使用）的补充加载。列表中任何以\"@workshopID\"格式存在的模组，在启用自动更新时也会被包含。禁止使用大写字母、空格或以数字开头的文件夹！（例如：myMod;vn;@123456789;@987654321;等）",
+            "env_variable": "MODIFICATIONS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "禁用详细日志记录",
+            "description": "添加了\"-noLogs\"启动参数。显著减少控制台输出/刷屏。注意：启用此参数也将阻止生成`.rpt`日志文件。",
+            "env_variable": "PARAM_NOLOGS",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "将任务加载到内存中",
+            "description": "添加了“-loadMissionToMemory”启动参数。服务器会在首个客户端下载任务时将其加载到内存中，随后保持预处理与预缓存状态，供后续客户端使用，从而节省部分服务器CPU资源。",
+            "env_variable": "PARAM_LOADMISSIONTOMEMORY",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "自动初始化任务",
+            "description": "添加了\"-autoInit\"启动参数。该参数会自动初始化任务，就像第一个客户端所做的那样。服务器配置文件（server.cfg）必须包含 `persistent = 1;`，否则此参数将被跳过。",
+            "env_variable": "PARAM_AUTOINIT",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "RCon 密码",
+            "description": "BattlEye的RCon密码，用于与符合Arma 3规范的RCon客户端/工具进行远程连接。建议选择仅包含字母数字的强密码。服务器配置文件（server.cfg）必须包含`BattlEye = 1;`，否则RCon将被禁用。",
+            "env_variable": "RCON_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|alpha_num",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 仅服务端模组",
+            "description": "用于\"-serverMods\"启动选项的模组文件夹。这些模组仅在服务器端运行，如果在server.cfg文件中启用了\"verifySignatures\"，客户端无需安装。列表中任何以\"@workshopID\"形式存在的模组也会包含在自动更新中（如果启用）。禁止使用大写字母、空格或以数字开头的文件夹！每个文件夹后必须跟一个分号（例如：@123456789;@987654321;等）。",
+            "env_variable": "SERVERMODS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 可选客户端模组",
+            "description": "一个以分号分隔的可选模组列表，这些模组会加载到 keys 文件夹中，但不会包含在服务器的模组参数中。这对于允许客户端在加载或不加载模组的情况下连接到服务器非常有用。此列表中的模组必须采用 \"@workshopID\" 格式（例如 @123456789;@987654321;）。如果启用了自动更新，这些模组也会包含在自动更新中。",
+            "env_variable": "OPTIONALMODS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 启用文件修补",
+            "description": "添加了\"-filePatching\"启动参数。允许游戏加载未打包的数据。该值也将应用于HC。",
+            "env_variable": "PARAM_FILEPATCHING",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 服务器 FPS",
+            "description": "调整服务器每秒尝试运行的最大模拟周期数。数值越高，网络消息发送越频繁，实体（单位/载具/抛射物等）的模拟频率越高，同时AI行为和视野计算也会更频繁。较高数值的实际影响取决于任务文件，并可能导致额外的非必要开销。请谨慎调整。该数值也将应用于HC（头戴式显示器）。",
+            "env_variable": "PARAM_LIMITFPS",
+            "default_value": "50",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|between:5,1000",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 无头客户端 (HC)",
+            "description": "与服务器并行启动的无头客户端数量（0 - 5）。如果您的服务器设有密码锁定，请务必设置以下\"HC连接密码\"变量。请注意：仅建议高级用户使用无头客户端，这会增加您允许的服务器资源额外开销，并且只有在提供符合HC规范的正确任务文件时才有益处。更多信息请参阅 https://community.bistudio.com/wiki/Arma_3:_Headless_Client。",
+            "env_variable": "HC_NUM",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|between:0,5",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] HC 隐藏控制台输出",
+            "description": "隐藏无头客户端的控制台输出（关键错误除外），以防止非必要的控制台刷屏。",
+            "env_variable": "HC_HIDE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[修复] 将模组文件名改为小写",
+            "description": "每个设置为加载的模组，其文件夹和文件名都将转换为小写（以防止错误）。建议在从Windows机器复制模组到服务器后，或当模组似乎无法加载时，在服务器启动时启用此功能一次。",
+            "env_variable": "MODS_LOWERCASE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[修复] 验证服务器文件",
+            "description": "当启用自动更新时，验证所有服务器文件。注意：这将显著增加服务器启动时间，因此建议仅在需要时启用此功能。",
+            "env_variable": "VALIDATE_SERVER",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[系统] Arma 3 专用服务器应用ID",
+            "description": "用于安装和更新。通常无需更改。",
+            "env_variable": "STEAMCMD_APPID",
+            "default_value": "233780",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|integer",
+            "field_type": "text"
+        },
+        {
+            "name": "[系统] basic.cfg 网址",
+            "description": "指向有效 Arma 3 的 basic.cfg 文件的 URL。\"基本\"配置文件在服务器运行期间用于高级网络性能调优。由于这是一个必需文件，该 URL 用于在安装过程中下载它，或者在启动时发现文件缺失时进行下载。",
+            "env_variable": "BASIC_CFG_URL",
+            "default_value": "https://raw.githubusercontent.com/pelican-eggs/games-steamcmd/main/arma/arma3/egg-arma3-config/basic.cfg",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|url",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/22"
+}

@@ -1,0 +1,145 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/38/download/egg-core-keeper.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:15:54+00:00",
+    "name": "Core Keeper",
+    "author": "karsten@fiedleronline.net",
+    "description": "《核心守护者》是一款支持单人或多人的生存沙盒游戏。\n\n--- 被一件神秘遗物所吸引，你是一名在古老洞穴中苏醒的探险家，这里充满了生物、资源和饰品。深陷地下，你的生存技能能否应对挑战？挖掘遗物和资源来建造基地、制作新装备、生存下去，并为核心充能。 ---",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:debian"
+    },
+    "file_denylist": [],
+    "startup": "export DISPLAY=:0; rm ./GameID.txt ./CoreKeeperServerLog.txt; touch ./CoreKeeperServerLog.txt; xvfb-run -s \"-screen 0 {{DISPLAY_WIDTH}}x{{DISPLAY_HEIGHT}}x{{DISPLAY_DEPTH}} -ac -nolisten tcp -nolisten unix\" ./CoreKeeperServer -batchmode -logfile CoreKeeperServerLog.txt -world {{WORLD_INDEX}} -worldname \"{{WORLD_NAME}}\" -worldseed {{WORLD_SEED}} $([[ \"{{GAME_ID}}\" != \"\" ]] && echo -n \" -gameid {{GAME_ID}}\") -maxplayers {{MAX_PLAYERS}} -worldmode {{WORLD_MODE}} -port {{SERVER_PORT}} & CKPID=$!; tail -f CoreKeeperServerLog.txt | grep -e '^\\[userid:[0-9]*\\] player' -e '^[^\\[]' & LOGPID=$!; trap \"kill ${CKPID}; wait ${CKPID}; kill ${LOGPID}; wait ${LOGPID}\" 15; wait $!",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Started session\"\r\n}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n# Image to install with is 'registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian'\r\n\r\n##\r\n#\r\n# Variables\r\n# STEAM_USER, STEAM_PASS, STEAM_AUTH - Steam user setup. If a user has 2fa enabled it will most likely fail due to timeout. Leave blank for anon install.\r\n# WINDOWS_INSTALL - if it's a windows server you want to install set to 1\r\n# SRCDS_APPID - steam app id found here - https://developer.valvesoftware.com/wiki/Dedicated_Servers_List\r\n# SRCDS_BETAID - beta branch of a steam app. Leave blank to install normal branch\r\n# SRCDS_BETAPASS - password for a beta branch should one be required during private or closed testing phases.. Leave blank for no password.\r\n# INSTALL_FLAGS - Any additional SteamCMD  flags to pass during install.. Keep in mind that steamcmd auto update process in the docker image might overwrite or ignore these when it performs update on server boot.\r\n# AUTO_UPDATE - Adding this variable to the egg allows disabling or enabling automated updates on boot. Boolean value. 0 to disable and 1 to enable.\r\n#\r\n ##\r\n\r\n# Install packages. Default packages below are not required if using our existing install image thus speeding up the install process.\r\n#apt -y update\r\n#apt -y --no-install-recommends install curl lib32gcc-s1 ca-certificates\r\n\r\n## just in case someone removed the defaults.\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd /tmp\r\nmkdir -p /mnt/server/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steamcmd\r\nmkdir -p /mnt/server/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd /mnt/server/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root /mnt\r\nexport HOME=/mnt/server\r\n\r\n## install game using steamcmd\r\n./steamcmd.sh +force_install_dir /mnt/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update ${SRCDS_APPID} validate +quit\r\n\r\n## set up 32 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk32\r\ncp -v linux32/steamclient.so ../.steam/sdk32/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk64\r\ncp -v linux64/steamclient.so ../.steam/sdk64/steamclient.so\r\n\r\n## add below your custom commands if needed\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "世界索引",
+            "description": "使用哪个世界索引。默认值：0。",
+            "env_variable": "WORLD_INDEX",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:0",
+            "field_type": "text"
+        },
+        {
+            "name": "世界名称",
+            "description": "用于服务器的名称。默认值：Core Keeper Server。",
+            "env_variable": "WORLD_NAME",
+            "default_value": "Core Keeper Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:100|min:3",
+            "field_type": "text"
+        },
+        {
+            "name": "世界种子",
+            "description": "新世界使用的种子。设置为0以生成随机种子。默认值：0。",
+            "env_variable": "WORLD_SEED",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:0",
+            "field_type": "text"
+        },
+        {
+            "name": "游戏ID",
+            "description": "用于服务器的游戏ID。长度至少需要28个字符，且只能包含字母和数字，排除Y、y、x、0、O。若为空或无效，则启动时会生成新的ID。默认值：空。",
+            "env_variable": "GAME_ID",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|min:28",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "允许连接到服务器的最大玩家数量。最大值为100。默认值：100。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "100",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:1|max:100",
+            "field_type": "text"
+        },
+        {
+            "name": "世界模式",
+            "description": "是否使用普通（0）或困难（1）模式进行世界。",
+            "env_variable": "WORLD_MODE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "Steam 应用 ID",
+            "description": "Core Keeper 专用服务器的 Steam 应用 ID",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "1963720",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:1963720",
+            "field_type": "text"
+        },
+        {
+            "name": "自动更新",
+            "description": "在启动时启用自动更新",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "DISPLAY_WIDTH",
+            "description": "虚拟显示宽度。修复：1.",
+            "env_variable": "DISPLAY_WIDTH",
+            "default_value": "1",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|integer",
+            "field_type": "text"
+        },
+        {
+            "name": "DISPLAY_HEIGHT",
+            "description": "虚拟显示高度。修复：1.",
+            "env_variable": "DISPLAY_HEIGHT",
+            "default_value": "1",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|integer",
+            "field_type": "text"
+        },
+        {
+            "name": "显示深度",
+            "description": "虚拟显示颜色深度。固定值：24。",
+            "env_variable": "DISPLAY_DEPTH",
+            "default_value": "24",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|integer",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/38"
+}

@@ -1,0 +1,116 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/212/download/egg-clusterio.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:20+00:00",
+    "name": "Clusterio",
+    "author": "psychoalex@thevcbc.com",
+    "description": "Clusterio 是一个集群化的 Factorio 服务器管理器，提供了在 Factorio 中实现跨服务器交互的工具。它此前因通过传送箱实现跨服务器传输和物品云存储而闻名。但该功能已从 Clusterio 中剥离，成为其专属插件 Subspace Storage。\n\nClusterio 本身不会以任何方式改变游戏玩法，您甚至可以使用 Clusterio 管理完全原版的 Factorio 服务器。插件负责将可见的修改注入游戏，请参阅插件章节以获取可安装到 Clusterio 集群中的现成插件。",
+    "features": null,
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:nodejs_18": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:nodejs_18",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:nodejs_19": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:nodejs_19",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:nodejs_20": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:nodejs_20",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:nodejs_21": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:nodejs_21"
+    },
+    "file_denylist": [],
+    "startup": "exec ./node_modules/.bin/clusterio{{SERVER_MODE}} run",
+    "config": {
+        "files": "{\r\n    \"config-controller.json\": {\r\n        \"parser\": \"json\",\r\n        \"find\": {\r\n            \"controller~1http_port\": \"{{server.build.default.port}}\",\r\n            \"controller~1name\": \"{{server.build.env.CLUSTER_NAME}}\"\r\n        }\r\n    },\r\n    \"config-host.json\": {\r\n        \"parser\": \"json\",\r\n        \"find\": {\r\n            \"host~1controller_url\": \"{{server.build.env.CONTROLLER_URL}}\",\r\n            \"host~1controller_token\": \"{{server.build.env.CONTROLLER_TOKEN}}\",\r\n            \"host~1public_address\": \"{{server.build.default.ip}}\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Started\"\r\n}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "container": "node:21-bookworm-slim",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n# Clusterio Installation Script\r\n#\r\n# Server Files: /mnt/server\r\napt update\r\napt install -y git curl jq file unzip make gcc g++ python3 python3-dev libtool\r\n\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\n\r\nif [ \"${USER_UPLOAD}\" == \"true\" ] || [ \"${USER_UPLOAD}\" == \"1\" ]; then\r\n    echo -e \"assuming user knows what they are doing have a good day.\"\r\n    exit 0\r\nfi\r\n\r\ncase \"${SERVER_MODE}\" in\r\n\r\n  \"controller\")\r\n    echo -e \"Initialising Clustorio In Controller mode\"\r\n        npm init \"@clusterio\" -y -- --allow-install-as-root --mode \"${SERVER_MODE}\" --download-headless --log-level \"${LOG_LEVEL}\" --admin \"${ADMIN_STRING}\" --public-address \"${SERVER_IP}\":\"${SERVER_PORT}\" --plugins ${PLUGINS}\r\n\t;;\r\n\r\n  \"host\")\r\n    echo -e \"Initialising Clustorio In Host mode\"\r\n\tnpm init \"@clusterio\" -y -- --allow-install-as-root --mode \"${SERVER_MODE}\" --download-headless --log-level \"${LOG_LEVEL}\" --host-name \"${HOST_NAME}\" --public-address \"${SERVER_IP}\" --controller-url \"${CONTROLLER_URL}\" --controller-token \"${CONTROLLER_TOKEN}\" --plugins ${PLUGINS}\r\n    ;;\r\n    \r\nesac\r\n\r\necho -e \"install complete\"\r\nexit 0"
+        }
+    },
+    "variables": [
+        {
+            "name": "服务器模式",
+            "description": "设置服务器的集群操作模式，可以是\"controller\"或\"host\"。最好将其视为管理节点或游戏服务器节点。\n\n需要在以下环境上配置：\n所有",
+            "env_variable": "SERVER_MODE",
+            "default_value": "controller",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:controller,host",
+            "field_type": "text"
+        },
+        {
+            "name": "日志级别",
+            "description": "选项：\"none\", \"fatal\", \"error\", \"warn\", \"audit\", \"info\", \"verbose\"\n\n必需于：\n所有",
+            "env_variable": "LOG_LEVEL",
+            "default_value": "info",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:none,fatal,error,warn,audit,info,verbose",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器管理员",
+            "description": "超级管理员账户名称\n\n需要位于：\nController",
+            "env_variable": "ADMIN_STRING",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:64",
+            "field_type": "text"
+        },
+        {
+            "name": "主机名",
+            "description": "控制器Web界面中的主机名\n\n需要位置：\n主机",
+            "env_variable": "HOST_NAME",
+            "default_value": "Your Sub-Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "控制器URL",
+            "description": "连接到控制器服务器的URL，如果你已为控制器服务器分配了额外的内部端口，则可以使用内部地址。  \n示例：http://yourip:yourport  \n需要在主机上填写。",
+            "env_variable": "CONTROLLER_URL",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:64",
+            "field_type": "text"
+        },
+        {
+            "name": "控制器令牌",
+            "description": "用于连接到控制器服务器的认证令牌，通过控制器Web界面生成。\n\n需要设置在：\n主机",
+            "env_variable": "CONTROLLER_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:256",
+            "field_type": "text"
+        },
+        {
+            "name": "插件",
+            "description": "要安装的Clusterio插件，空格分隔的列表。\n\n示例：\n@clusterio/plugin-subspace_storage @clusterio/plugin-global_chat @clusterio/plugin-research_sync @clusterio/plugin-inventory_sync\n\n需要在以下版本安装：\n所有",
+            "env_variable": "PLUGINS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "集群名称",
+            "description": "你的Controller服务器集群的名称。\n\n必需：\nController",
+            "env_variable": "CLUSTER_NAME",
+            "default_value": "Your Cluster",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/212"
+}

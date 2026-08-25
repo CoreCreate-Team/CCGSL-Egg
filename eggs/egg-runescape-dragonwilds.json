@@ -1,0 +1,115 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/99/download/egg-runescape-dragonwilds.json"
+    },
+    "exported_at": "2026-08-23T08:15:46+00:00",
+    "name": "RuneScape: Dragonwilds",
+    "author": "red_thirten@yahoo.com",
+    "description": "《RuneScape: Dragonwilds》是一款设定在《RuneScape》世界中的合作生存角色扮演游戏。最多6名玩家可以在专属服务器上共同探索、制作、建造和战斗。内存建议为2 GB基础内存 + 每位玩家1 GB（满员6人服务器需8 GB）。",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:debian"
+    },
+    "file_denylist": [],
+    "startup": "./RSDragonwilds/Binaries/Linux/RSDragonwildsServer-Linux-Shipping -log -port={{SERVER_PORT}} -ini:Game:[/Script/Engine.GameSession]:MaxPlayers={{MAX_PLAYERS}}",
+    "config": {
+        "files": "{\n    \"RSDragonwilds/Saved/Config/LinuxServer/DedicatedServer.ini\": {\n        \"parser\": \"ini\",\n        \"find\": {\n            \"[/Script/Dominion.DedicatedServerSettings].OwnerId\": \"{{server.build.env.OWNER_ID}}\",\n            \"[/Script/Dominion.DedicatedServerSettings].ServerName\": \"{{server.build.env.SERVER_NAME}}\",\n            \"[/Script/Dominion.DedicatedServerSettings].DefaultWorldName\": \"{{server.build.env.DEFAULT_WORLD_NAME}}\",\n            \"[/Script/Dominion.DedicatedServerSettings].AdminPassword\": \"{{server.build.env.ADMIN_PASSWORD}}\",\n            \"[/Script/Dominion.DedicatedServerSettings].WorldPassword\": \"{{server.build.env.WORLD_PASSWORD}}\"\n        }\n    }\n}",
+        "startup": "{\n    \"done\": \"CREATE SESSION - Advertise\"\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\n\n## File: RuneScape Dragonwilds Egg - egg-pterodactyl-runescape-dragonwilds.json\n## Authors: David Wolfe (Red-Thirten)\n## Date: 2026/04/23\n## License: MIT License\n## Image to install with is 'registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian'\n\n# Download and install SteamCMD\nexport HOME=/mnt/server\ncd /tmp\nmkdir -p $HOME/steamcmd $HOME/steamapps\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\ntar -xzvf steamcmd.tar.gz -C $HOME/steamcmd\ncd $HOME/steamcmd\n\n# SteamCMD fails otherwise for some reason, even running as root.\n# This is changed at the end of the install process anyways.\nchown -R root:root /mnt\n\n# Install/Verify game server using SteamCMD\n./steamcmd.sh +force_install_dir $HOME +login anonymous +app_update ${SRCDS_APPID} validate +quit\n\n# Set up 32 and 64 bit libraries\nmkdir -p $HOME/.steam/sdk{32,64}\ncp -v linux32/steamclient.so /mnt/server/.steam/sdk32/steamclient.so\ncp -v linux64/steamclient.so /mnt/server/.steam/sdk64/steamclient.so\n\n## RuneScape Dragonwilds Setup\n# Check for successful installation & ensure binary is executable\nBINARY_DIR=$HOME/RSDragonwilds/Binaries/Linux\nBINARY_NAME=RSDragonwildsServer-Linux-Shipping\nif [[ -f $BINARY_DIR/$BINARY_NAME ]]; then\n    chmod +x $BINARY_DIR/$BINARY_NAME\n    echo -e \"\\nRuneScape Dragonwilds Dedicated Server successfully installed!\\n\"\n    exit 0\nelse\n    echo -e \"\\n\\nSteamCMD failed to install the RuneScape Dragonwilds Dedicated Server!\"\n    echo -e \"\\tTry reinstalling the server again.\\n\"\n    exit 1\nfi",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "/bin/bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "自动更新",
+            "description": "启动时快速检查服务器更新，并在必要时进行更新。（1 启用 | 0 禁用）",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[必需] 所有者ID",
+            "description": "你的《RuneScape: Dragonwilds》玩家ID。可在游戏内设置菜单底部找到。使用复制按钮将其添加到剪贴板。未设置所有者ID时服务器将无法启动！",
+            "env_variable": "OWNER_ID",
+            "default_value": "CHANGEME000000000000000000000000",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|alpha_num|size:32",
+            "field_type": "text"
+        },
+        {
+            "name": "默认世界名称",
+            "description": "首次启动时创建的世界名称。玩家在“世界”界面的“公开”选项卡中通过此世界名称搜索您的服务器（区分大小写）。上传的世界将忽略此设置，并使用其自身的名称。",
+            "env_variable": "DEFAULT_WORLD_NAME",
+            "default_value": "Default World",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:32",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器名称",
+            "description": "你的服务器名称。在游戏内服务器浏览器中显示为“创建者”。",
+            "env_variable": "SERVER_NAME",
+            "default_value": "Dragonwilds",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:16",
+            "field_type": "text"
+        },
+        {
+            "name": "管理员密码",
+            "description": "知道此密码的任何人都可以进入暂停菜单 > 设置菜单中的服务器管理选项卡。在管理员密码再次更改之前，他们将被视为管理员。你可以通过进入文件 > RSDragonwilds > 已保存 > 配置 > Linux > DedicatedServer.ini 来查看使用管理员密码进入服务器管理界面的人员列表。",
+            "env_variable": "ADMIN_PASSWORD",
+            "default_value": "CHANGE ME TO A SECURE PASSWORD!",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "世界密码",
+            "description": "玩家加入服务器时必须输入的可选密码。该密码将覆盖世界中存储的任何密码。如果你希望任何人都能加入你的世界，可以留空。",
+            "env_variable": "WORLD_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "最大玩家数量（1-6）。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "6",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|between:1,6",
+            "field_type": "text"
+        },
+        {
+            "name": "[系统] 专用服务器应用ID",
+            "description": "用于安装和更新的Steam应用ID。",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "4019830",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|integer|in:4019830",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/99"
+}

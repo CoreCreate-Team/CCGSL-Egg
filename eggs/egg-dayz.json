@@ -1,0 +1,355 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/44/download/egg-dayz.json"
+    },
+    "exported_at": "2026-08-23T08:15:56+00:00",
+    "name": "DayZ",
+    "author": "red_thirten@yahoo.com",
+    "description": "你能在末日后的世界中生存多久？一片被感染“僵尸”占领的土地，你需要与其他幸存者争夺有限的资源。你会与陌生人结盟，共同坚守吗？还是独行如狼，避免背叛？这就是《DayZ》——这是你的故事。",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/games:dayz": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/games:dayz"
+    },
+    "file_denylist": [],
+    "startup": "./{{SERVER_BINARY}} -port={{SERVER_PORT}} -profiles=profiles -bepath=./ -config=serverDZ.cfg -mod={{CLIENT_MODS}} -serverMod={{SERVERMODS}} {{STARTUP_PARAMS}}",
+    "config": {
+        "files": "{\r\n    \"serverDZ.cfg\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"hostname =\": \"hostname = \\\"{{env.SERVER_HOSTNAME}}\\\";\",\r\n            \"password =\": \"password = \\\"{{env.SERVER_PASSWORD}}\\\";\",\r\n            \"passwordAdmin =\": \"passwordAdmin = \\\"{{env.ADMIN_PASSWORD}}\\\";\",\r\n            \"maxPlayers\": \"maxPlayers = {{env.MAX_PLAYERS}};\",\r\n            \"verifySignatures\": \"verifySignatures = {{env.VERIFY_SIGNATURES}};\",\r\n            \"forceSameBuild\": \"forceSameBuild = {{env.ENFORCE_BUILD}};\",\r\n            \"disableVoN\": \"disableVoN = {{env.DISABLE_VON}};\",\r\n            \"vonCodecQuality\": \"vonCodecQuality = {{env.VON_QUALITY}};\",\r\n            \"disable3rdPerson\": \"disable3rdPerson = {{env.DISABLE_THIRD}};\",\r\n            \"disableCrosshair\": \"disableCrosshair = {{env.DISABLE_CROSSHAIR}};\",\r\n            \"disablePersonalLight\": \"disablePersonalLight = {{env.DISABLE_PERSONAL_LIGHT}};\",\r\n            \"lightingConfig\": \"lightingConfig = {{env.LIGHTING_CONFIG}};\",\r\n            \"serverTimeAcceleration\": \"serverTimeAcceleration = {{env.TIME_MULT}};\",\r\n            \"serverNightTimeAcceleration\": \"serverNightTimeAcceleration = {{env.NIGHT_MULT}};\",\r\n            \"serverTimePersistent\": \"serverTimePersistent = {{env.PERSISTENT_TIME}};\",\r\n            \"steamQueryPort\": \"steamQueryPort = {{env.QUERY_PORT}};\"\r\n        }\r\n    },\r\n    \"battleye/beserver_x64.cfg\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"RConPort\": \"RConPort {{env.RCON_PORT}}\",\r\n            \"RConPassword\": \"RConPassword {{env.RCON_PASSWORD}}\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"Mission read.\"\r\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\n\r\n## File: Pterodactyl DayZ Egg - egg-pterodactyl-day-z.json\r\n## Author: David Wolfe (Red-Thirten)\r\n## Date: 2024/07/04\r\n## License: MIT License\r\n## Image to install with is 'registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian'\r\n\r\nexport HOME=/mnt/server\r\nCONFIG_URL=\"https://raw.githubusercontent.com/pelican-eggs/games-steamcmd/main/dayz/config/serverDZ.cfg\"\r\nMISSIONS_GITHUB_PACKAGE=\"BohemiaInteractive/DayZ-Central-Economy\"\r\n\r\n## Download and install SteamCMD\r\ncd /tmp\r\nmkdir -p $HOME/steamcmd $HOME/steamapps\r\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C $HOME/steamcmd\r\ncd $HOME/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root /mnt\r\n\r\nif [ \"$SKIP_INSTALL\" -eq 1 ]; then\r\n    # This is for the minority of hosts who want to install this server with Steam Guard enabled.\r\n    # Please read the README for instructions on how to do this properly!\r\n    echo -e '\"Skip Game Server Install\" variable is set to enabled!'\r\n    echo -e \"\\tOnly SteamCMD will be installed...\"\r\n    ./steamcmd.sh +quit\r\nelse\r\n    # Install/Verify game server using SteamCMD\r\n    ./steamcmd.sh +force_install_dir $HOME \"+login \\\"${STEAM_USER}\\\" \\\"${STEAM_PASS}\\\"\" +app_update ${STEAMCMD_APPID} $( [[ -z ${STEAMCMD_BETAID} ]] || printf %s \"-beta ${STEAMCMD_BETAID}\" ) $( [[ -z ${STEAMCMD_BETAPASS} ]] || printf %s \"-betapassword ${STEAMCMD_BETAPASS}\" ) ${INSTALL_FLAGS} validate +quit\r\nfi\r\necho -e \"\"\r\n\r\n# Set up 32 and 64 bit libraries\r\nmkdir -p $HOME/.steam/sdk{32,64}\r\ncp -v linux32/steamclient.so $HOME/.steam/sdk32/steamclient.so\r\ncp -v linux64/steamclient.so $HOME/.steam/sdk64/steamclient.so\r\n\r\n## DayZ Setup\r\ncd $HOME\r\n\r\n# Check for successful server binary installation\r\nif [ ! -f DayZServer ] && [ \"$SKIP_INSTALL\" -ne 1 ]; then\r\n    echo -e \"\\n\\n[ERROR] SteamCMD failed to install the DayZ Dedicated Server!\"\r\n    echo -e \"\\tTry reinstalling the server again.\\n\"\r\n    exit 1\r\nfi\r\n\r\n# Download default serverDZ.cfg if it is missing or empty (occurs when Steam account *owns* the DayZ game)\r\nif [ ! -f serverDZ.cfg ] || [ ! -s serverDZ.cfg ]; then\r\n    echo -e \"'serverDZ.cfg' is missing or empty. Downloading default config file...\"\r\n    curl -LO ${CONFIG_URL}\r\n    if [ ! -f serverDZ.cfg ]; then\r\n        echo -e \"\\n\\n[ERROR] Failed to download default server config file!\"\r\n        exit 1\r\n    fi\r\n    chmod 644 serverDZ.cfg\r\nfi\r\n\r\n# Add required 'steamQueryPort' parameter to the end of serverDZ.cfg (if it's missing)\r\nif ! grep -q \"steamQueryPort\" serverDZ.cfg; then\r\n    echo -e \"Adding additional required parameters to the end of 'serverDZ.cfg'...\"\r\n    cat >> serverDZ.cfg << EOL\r\n\r\n\r\nsteamQueryPort = ${QUERY_PORT};\r\nEOL\r\nfi\r\n\r\n# Download vanilla mission files if they are missing (occurs when Steam account *does not own* the DayZ game)\r\nif { [ ! -d \"mpmissions\" ] || [ -z \"$(ls -A mpmissions 2>/dev/null)\" ]; } && [ \"$SKIP_INSTALL\" -ne 1 ]; then\r\n    echo -e \"[WARNING] The Steam account used to install this server does not own the DayZ game!\"\r\n    echo -e \"\\tVanilla mission files will have to be MANUALLY updated in the future if they update! (See Egg's README for instructions)\"\r\n    echo -e \"\\tDownloading and installing vanilla mission files...\"\r\n    mkdir -p $HOME/mpmissions\r\n    cd $HOME/mpmissions\r\n    LATEST_JSON=$(curl --silent \"https://api.github.com/repos/${MISSIONS_GITHUB_PACKAGE}/releases/latest\")\r\n    DOWNLOAD_URL=$(echo ${LATEST_JSON} | jq -r .tarball_url)\r\n    curl -Lo mpmissions.tar.gz ${DOWNLOAD_URL}\r\n    if [ ! -f mpmissions.tar.gz ]; then\r\n        echo -e \"\\n\\n[ERROR] Failed to download vanilla mission files!\"\r\n        exit 1\r\n    fi\r\n    tar -xzvf mpmissions.tar.gz --strip-components=1 --wildcards '*/dayzOffline.chernarusplus/*' '*/dayzOffline.enoch/*'\r\n    rm -f mpmissions.tar.gz\r\nfi\r\n\r\n# Check for BattlEye RCon configuration\r\nmkdir -p $HOME/battleye\r\ncd $HOME/battleye\r\nif [ ! -f beserver_x64.cfg ]; then\r\n    echo -e \"Creating BattlEye RCon Configuration...\"\r\n    cat > beserver_x64.cfg << EOF\r\nRConPort ${RCON_PORT}\r\nRConPassword ${RCON_PASSWORD}\r\nRestrictRCon 0\r\nEOF\r\nfi\r\n\r\necho -e \"\\nDayZ Dedicated Server successfully installed!\\n\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "/bin/bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "[主机] Steam 查询端口",
+            "description": "用于Steam服务器列表功能的UDP端口。有助于服务器在客户端服务器浏览器中可见。",
+            "env_variable": "QUERY_PORT",
+            "default_value": "27016",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|integer|between:1024,65536",
+            "field_type": "text"
+        },
+        {
+            "name": "[主机] Steam 用户名",
+            "description": "用于安装和更新。该账户无需拥有DayZ，但必须是有效的Steam账户（不能使用匿名登录）。出于安全考虑，建议您为专用服务器创建一个新的Steam账户。*此信息对服务器所有者不可见。*",
+            "env_variable": "STEAM_USER",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|not_in:anonymous",
+            "field_type": "text"
+        },
+        {
+            "name": "[主机] Steam 密码",
+            "description": "用于安装和更新。Steam Guard 必须完全关闭，以便服务器和模组高效下载。*此信息对服务器所有者不可见，但会以纯文本形式存储。不建议使用个人账户；最好使用虚拟账户。*",
+            "env_variable": "STEAM_PASS",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "[主机] 禁用模组下载/更新",
+            "description": "如果Steam账户未拥有DayZ基础游戏，Steam创意工坊的模组下载/更新将无法正常工作。若出现此情况，该设置可禁用此功能以避免错误。(1 开启 | 0 关闭)",
+            "env_variable": "DISABLE_MOD_UPDATES",
+            "default_value": "0",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[主机] SteamCMD 重试尝试次数",
+            "description": "在可恢复的错误发生后，SteamCMD 应重试下载服务器或模组的次数。（例如，特别大的模组下载超时）",
+            "env_variable": "STEAMCMD_ATTEMPTS",
+            "default_value": "3",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|integer",
+            "field_type": "text"
+        },
+        {
+            "name": "[主机] 跳过游戏服务器安装",
+            "description": "在安装脚本期间跳过通过 SteamCMD 安装游戏服务器文件。仅当您尝试使用启用了 Steam 令牌的 Steam 账户安装服务器时才应启用此选项（不推荐）。",
+            "env_variable": "SKIP_INSTALL",
+            "default_value": "0",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "自动更新",
+            "description": "启动时快速检查任何服务器或模组更新，并在必要时进行更新。",
+            "env_variable": "UPDATE_SERVER",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器名称",
+            "description": "在服务器列表中显示的服务器名称。",
+            "env_variable": "SERVER_HOSTNAME",
+            "default_value": "DayZ Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "服务器允许的最大玩家数量。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "64",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|gt:0",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器密码",
+            "description": "加入服务器需要密码。留空则无需密码。",
+            "env_variable": "SERVER_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "管理员密码",
+            "description": "服务器管理员登录密码。",
+            "env_variable": "ADMIN_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "RCON 端口",
+            "description": "被工具或Battlemetrics用于从外部管理服务器。建议RCON端口设置为游戏端口+3。例如，如果游戏端口是2302，则RCON端口应为2305。",
+            "env_variable": "RCON_PORT",
+            "default_value": "2305",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|integer|between:1024,65536",
+            "field_type": "text"
+        },
+        {
+            "name": "RCON 密码",
+            "description": "此密码用于通过RCON验证第三方访问服务器控制权限。",
+            "env_variable": "RCON_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "模组列表文件（从DayZ启动器导出）",
+            "description": "导出模组列表的文件名。此文件将被解析以用于模组的安装和加载。请将您的HTML文件上传至根目录（例如 /home/container/modlist.html）。留空则禁用从模组列表加载模组。",
+            "env_variable": "MOD_FILE",
+            "default_value": "modlist.html",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "额外模组",
+            "description": "从根目录加载的模组文件夹列表，以分号分隔。适用于加载手动上传的模组。列表中格式为\"@workshopID\"的模组也会包含在自动更新中（如果启用）。禁止使用大写字母、空格或以数字开头的文件夹！（例如：myMod;@123456789;@987654321;etc;）",
+            "env_variable": "MODIFICATIONS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "验证签名",
+            "description": "确保所有客户端都拥有与服务器完全相同的模组或附加包版本。否则，客户端在连接时将被踢出。(2 开启 | 0 关闭)",
+            "env_variable": "VERIFY_SIGNATURES",
+            "default_value": "2",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:0,2",
+            "field_type": "text"
+        },
+        {
+            "name": "强制游戏版本",
+            "description": "当启用时，服务器将只允许与服务器版本相同的客户端连接。",
+            "env_variable": "ENFORCE_BUILD",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "禁用VoN",
+            "description": "开启后，将禁用服务器中的网络语音（语音聊天）功能。",
+            "env_variable": "DISABLE_VON",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "VoN 质量",
+            "description": "网络语音编解码器质量；数值越高越好。（取值范围0-30）",
+            "env_variable": "VON_QUALITY",
+            "default_value": "20",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|between:0,30",
+            "field_type": "text"
+        },
+        {
+            "name": "禁用第三人称",
+            "description": "开启后，将在服务器上禁用第三人称视角。",
+            "env_variable": "DISABLE_THIRD",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "禁用准星",
+            "description": "开启后，将在服务器上禁用准星显示。",
+            "env_variable": "DISABLE_CROSSHAIR",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "禁用个人光源",
+            "description": "开启后，将在服务器上的夜间时段禁用所有客户端上方的一个个人光源。",
+            "env_variable": "DISABLE_PERSONAL_LIGHT",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "暗夜",
+            "description": "开启后，夜晚将变得更暗（更贴近真实的夜晚，但无光源时难以视物）。",
+            "env_variable": "LIGHTING_CONFIG",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "持久时间",
+            "description": "实际服务器时间会保存到存储中，因此当开启时，下次服务器启动将使用已保存的时间值。",
+            "env_variable": "PERSISTENT_TIME",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "时间倍率",
+            "description": "这是游戏内时间的时间倍率（例如，设为12时，游戏内一个完整的24小时周期会加快12倍，使其在“现实生活”中持续2小时）。（数值范围：0-24）",
+            "env_variable": "TIME_MULT",
+            "default_value": "12",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|between:0,24",
+            "field_type": "text"
+        },
+        {
+            "name": "夜晚倍数",
+            "description": "这是一个额外的倍率，用于加快或减慢游戏中的夜晚时间。它会与\"时间倍率\"变量相乘，得出夜晚时间的最终倍率。（数值范围：0.1-64.0）",
+            "env_variable": "NIGHT_MULT",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|between:0.1,64",
+            "field_type": "text"
+        },
+        {
+            "name": "[修复] 将模组文件名改为小写",
+            "description": "每个设置为加载的模组，其文件夹和文件名都将转换为小写（以防止错误）。建议在从Windows机器复制模组到服务器后，或当模组似乎无法加载时，在服务器启动时启用此功能一次。",
+            "env_variable": "MODS_LOWERCASE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[修复] 验证服务器文件",
+            "description": "当自动更新开启时，验证所有服务器文件。注意：这将显著增加服务器启动时间，因此建议仅在需要时启用此功能。",
+            "env_variable": "VALIDATE_SERVER",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 仅服务端模组",
+            "description": "与“-serverMods”启动选项配合使用的模组文件夹。这些模组仅在服务器端运行，如果“验证签名”已开启，则客户端无需安装。列表中任何以“@workshopID”形式存在的模组也将包含在自动更新中（如果启用）。禁止使用大写字母、空格或以数字开头的文件夹！每个文件夹后必须跟一个分号（例如：@123456789;@987654321;等）。",
+            "env_variable": "SERVERMODS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 额外启动参数",
+            "description": "有关此字段的有效标志，请参阅 https://community.bistudio.com/wiki/DayZ:Server_Configuration#Launch_Parameters 以获取更多信息。",
+            "env_variable": "STARTUP_PARAMS",
+            "default_value": "-dologs -adminlog -netlog -freezecheck",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 服务端核心",
+            "description": "当前无法更改。保留此项是为了日后引入其他具有不同可执行文件名称的分支时使用。",
+            "env_variable": "SERVER_BINARY",
+            "default_value": "DayZServer",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|in:DayZServer",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] DayZ 专用服务器应用 ID",
+            "description": "用于安装和更新。通常无需更改。223350 对应稳定版分支，1042420 对应实验版分支。切换分支可能需要删除所有服务器文件并重新安装。",
+            "env_variable": "STEAMCMD_APPID",
+            "default_value": "223350",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|integer|in:223350,1042420",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/44"
+}

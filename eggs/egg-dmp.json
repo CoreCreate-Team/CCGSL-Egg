@@ -1,0 +1,93 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/228/download/egg-ksp-dmp.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:29+00:00",
+    "name": "KSP DMP",
+    "author": "rufanyin29@gmail.com",
+    "description": "黑暗多人游戏模组服务器（用于坎巴拉太空计划）",
+    "features": null,
+    "docker_images": {
+        "Mono": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:mono_latest"
+    },
+    "file_denylist": [],
+    "startup": "mono DMPServer.exe",
+    "config": {
+        "files": "{\r\n    \"Config/Settings.txt\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"port\": \"{{server.build.default.port}}\",\r\n            \"modpackMode\": \"{{server.build.env.MODPACKMODE}}\",\r\n            \"warpMode\": \"{{server.build.env.WARPMODE}}\",\r\n            \"gameMode\": \"{{server.build.env.GAMEMODE}}\",\r\n            \"gameDifficulty\": \"{{server.build.env.DIFFICULTY}}\",\r\n            \"whitelisted\": \"{{server.build.env.WHITELIST}}\",\r\n            \"serverName\": \"{{server.build.env.SERVERNAME}}\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Ready!\"\r\n}",
+        "stop": "/exit"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n\r\n\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\n\r\nV=$(curl -s https://d-mp.org/downloads | grep \"DMP Server\" | awk -F 'href=\"' 'NR==2 {print $2}' | awk -F '\"' '{print $1}') # /builds/release/v0.3.8.3/DMPServer.zip\r\n\r\necho \"Download link: https://d-mp.org${V}\"\r\ncurl -sSL -o DMPServer.zip https://d-mp.org${V}\r\n\r\nunzip -o DMPServer.zip\r\nmv DMPServer/* ./\r\n\r\nrm -rf DMPServer\r\nrm DMPServer.zip\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "模组包模式",
+            "description": "指定整合包类型。",
+            "env_variable": "MODPACKMODE",
+            "default_value": "NONE",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:NONE,CKAN,GAMEDATA",
+            "field_type": "text"
+        },
+        {
+            "name": "传送模式",
+            "description": "指定传送点类型。",
+            "env_variable": "WARPMODE",
+            "default_value": "SUBSPACE",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:MCW_FORCE,MCW_VOTE,MCW_LOWEST,SUBSPACE_SIMPLE,SUBSPACE,NONE",
+            "field_type": "text"
+        },
+        {
+            "name": "游戏模式",
+            "description": "指定游戏类型。",
+            "env_variable": "GAMEMODE",
+            "default_value": "SANDBOX",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:SANDBOX,CAREER,SCIENCE",
+            "field_type": "text"
+        },
+        {
+            "name": "游戏难度",
+            "description": "指定服务器的游戏难度。",
+            "env_variable": "DIFFICULTY",
+            "default_value": "NORMAL",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:EASY,NORMAL,MODERATE,HARD,CUSTOM",
+            "field_type": "text"
+        },
+        {
+            "name": "白名单",
+            "description": "启用白名单。",
+            "env_variable": "WHITELIST",
+            "default_value": "False",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:True,False",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器名称",
+            "description": "服务器的名称。",
+            "env_variable": "SERVERNAME",
+            "default_value": "DMP Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:48",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/228"
+}

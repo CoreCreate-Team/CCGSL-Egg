@@ -1,0 +1,66 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/148/download/egg-nukkit.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:09+00:00",
+    "name": "Nukkit",
+    "author": "parker@parkervcp.com",
+    "description": "Nukkit 是一款为《我的世界：携带版》打造的核动力服务器软件\n\nhttps://cloudburstmc.org",
+    "features": null,
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-ip\": \"0.0.0.0\",\r\n            \"enable-query\": \"true\",\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"query.port\": \"{{server.build.default.port}}\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \")! \"\r\n}",
+        "stop": "stop"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:alpine",
+            "entrypoint": "ash",
+            "script": "#!/bin/ash\r\n# Nukkit Installation Script\r\n#\r\n# Server Files: /mnt/server\r\napk add --no-cache curl openssl\r\n\r\ncd /mnt/server\r\n\r\n## Only download if a path is provided, otherwise continue.\r\nif [ ! -z \"${DL_PATH}\" ]; then\r\n    MODIFIED_DOWNLOAD=`eval echo $(echo ${DL_PATH} | sed -e 's/{{/${/g' -e 's/}}/}/g')`\r\n    wget ${MODIFIED_DOWNLOAD} -O ${SERVER_JARFILE}\r\nelif [ -z \"${NUKKIT_VERSION}\" ] || [ \"${NUKKIT_VERSION}\" == \"latest\" ]; then\r\n    wget https://ci.opencollab.dev/job/NukkitX/job/Nukkit/job/master/lastSuccessfulBuild/artifact/target/nukkit-1.0-SNAPSHOT.jar -O ${SERVER_JARFILE}\r\nelse\r\n    wget https://ci.opencollab.dev/job/NukkitX/job/Nukkit/job/master/${NUKKIT_VERSION}/artifact/target/nukkit-1.0-SNAPSHOT.jar -O ${SERVER_JARFILE}\r\nfi\r\n\r\nif [ ! -f nukkit.yml ]; then\r\n    wget https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/minecraft/bedrock/nukkit/nukkit.yml\r\nfi\r\n\r\nif [ ! -f server.properties ]; then\r\n    wget https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/minecraft/bedrock/nukkit/server.properties\r\nfi\r\n\r\necho -s \"Install completed!\""
+        }
+    },
+    "variables": [
+        {
+            "name": "服务器Jar文件",
+            "description": "用于运行服务器的服务器jar文件名。",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "server.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:/^([\\w\\d._-]+)(\\.jar)$/",
+            "field_type": "text"
+        },
+        {
+            "name": "下载路径",
+            "description": "用于下载Nukkit的URL，而非在服务器上构建。此URL对用户不可见。在URL中使用<code>{{DL_VERSION}}</code>可自动将指定版本插入URL。若未输入URL，Spigot将直接在容器内构建（在低内存容器中会失败）。",
+            "env_variable": "DL_PATH",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "nukkit 版本",
+            "description": "要下载的Nukkitt版本（使用--rev标签）。使用\"latest\"表示最新版本。",
+            "env_variable": "NUKKIT_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/148"
+}

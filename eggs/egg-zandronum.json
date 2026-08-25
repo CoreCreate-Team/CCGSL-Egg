@@ -1,0 +1,153 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/210/download/egg-zandronum.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:20+00:00",
+    "name": "Zandronum",
+    "author": "sup@libtar.de",
+    "description": "Zandronum is a multiplayer oriented port, based off Skulltag, for Doom and Doom II by id Software.\r\n\r\nThis egg uses the Freedoom WAD by default.",
+    "features": null,
+    "docker_images": {
+        "Debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:debian"
+    },
+    "file_denylist": [],
+    "startup": "./zandronum-server -port {{SERVER_PORT}} -config /home/container/zandronum.ini +set dmflags {{DMFLAGS}} +set dmflags2 {{DMFLAGS2}} +set zadmflags {{ZADMFLAGS}} +set compatflags {{COMPATFLAGS}} +set compatflags2 {{COMPATFLAGS2}} +set zacompatflags {{ZACOMPATFLAGS}} -iwad IWAD/{{IWAD}} -file PWAD/{{PWADS}} -host {{MAX_PLAYERS}} +map {{MAP}} -skill {{SKILL}}  -netmode 1",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"UDP Initialized.\"\r\n}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:alpine",
+            "entrypoint": "ash",
+            "script": "#!/bin/bash\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\n\r\nARCH=$([[ \"$(uname -m)\" == \"x86_64\" ]] && echo \"linux-x86_64\" || echo \"linuxserver-armv8\")\r\n\r\necho \"Fetching latest version number of Zandronum\"\r\nversion=\"$(wget -q -O - http://zandronum.com/download |\r\nsed -n 's/.*The latest version is <strong>\\(.*\\)<\\/strong>.*/\\1/p')\"\r\n\r\nz=\"zandronum\"$version\"-${ARCH}.tar.bz2\"\r\n\r\necho \"Downloading release $version of Zandronum.\"\r\necho \"Executing wget -nc https://zandronum.com/downloads/$z\"\r\nwget -nc https://zandronum.com/downloads/\"$z\"\r\necho \"Untar Zandronum\"\r\necho \"Executing tar -xjvf $z\"\r\ntar -xjvf \"$z\"\r\n\r\necho \"Remove useless files\"\r\nrm \"$z\"\r\nrm zandronum # This is the client, we don't need that.\r\n\r\necho \"Making zandronum-server executable\"\r\nchmod +x zandronum-server\r\n\r\n# Create IWAD and PWAD folder\r\nmkdir -p IWAD\r\nmkdir -p PWAD\r\n\r\n# Download latest freedoom for the default iwad\r\nfreedoom=$(curl -s https://api.github.com/repos/freedoom/freedoom/releases/latest | jq .assets | jq -r .[].browser_download_url | grep -m1 -i freedoom-.*.zip)\r\n\r\necho \"$freedoom\"\r\ncurl -L -o freedoom.zip $freedoom\r\n\r\nunzip -j -o freedoom.zip '*/*' -d IWAD/\r\n\r\n# Removing useless files\r\nrm freedoom.zip\r\nrm IWAD/*.html\r\nrm IWAD/*.pdf\r\n\r\n# Download the configuration file. The server fail to generate a config by itself so we have to supply one or it will crash\r\nwget https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/doom/zandronum/zandronum.ini -O /mnt/server/zandronum.ini\r\n\r\ntouch adminlist.txt\r\ntouch whitelist.txt\r\ntouch banlist.txt\r\n\r\nif [[ \"${GEOIP}\" == \"1\" ]]; then\r\n    echo \"setting up GeoIP\"\r\n    wget https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/doom/zandronum/GeoIP.dat -O /mnt/server/GeoIP.dat\r\nfi\r\n\r\n\r\necho \"Install finished.\""
+        }
+    },
+    "variables": [
+        {
+            "name": "最大玩家数",
+            "description": "您的游戏服务器允许的最大玩家数量。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "16",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "nullable|integer|max:128",
+            "field_type": "text"
+        },
+        {
+            "name": "IWAD",
+            "description": "IWAD是Doom引擎游戏的主要资源文件，包含游戏的所有原始音效、关卡和图形。",
+            "env_variable": "IWAD",
+            "default_value": "freedoom1.wad",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "PWADS",
+            "description": "如果您想使用多个PWAD，可以通过用空格分隔它们来实现。\n\nPWAD是一种包含数据块的WAD，通常用作附加组件。它们替换游戏内资源。",
+            "env_variable": "PWADS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "技能",
+            "description": "设置游戏难度。",
+            "env_variable": "SKILL",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|between:0,15",
+            "field_type": "text"
+        },
+        {
+            "name": "地图",
+            "description": "服务器启动时应使用的地图。",
+            "env_variable": "MAP",
+            "default_value": "e1m1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "dmflags",
+            "description": "游戏玩法标志. https://wiki.zandronum.com/DMFlags",
+            "env_variable": "DMFLAGS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "dmflags2",
+            "description": "游戏玩法标志. https://wiki.zandronum.com/DMFlags",
+            "env_variable": "DMFLAGS2",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "zadmflags",
+            "description": "Zandronum 特定游戏标志。 https://wiki.zandronum.com/DMFlags",
+            "env_variable": "ZADMFLAGS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "兼容性标志",
+            "description": "兼容性标志。https://wiki.zandronum.com/DMFlags",
+            "env_variable": "COMPATFLAGS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "兼容标志2",
+            "description": "兼容性标志。https://wiki.zandronum.com/DMFlags",
+            "env_variable": "COMPATFLAGS2",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "zacompatflags",
+            "description": "Zandronum 特定的兼容性标志。https://wiki.zandronum.com/DMFlags",
+            "env_variable": "ZACOMPATFLAGS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255",
+            "field_type": "text"
+        },
+        {
+            "name": "启用 GeoIP",
+            "description": "GeoIP 用于识别客户端 IP 地址所在的国家",
+            "env_variable": "GEOIP",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/210"
+}

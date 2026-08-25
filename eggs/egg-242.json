@@ -1,0 +1,123 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/242/download/egg-path-of-titans.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:17+00:00",
+    "name": "Path Of Titans",
+    "author": "danielivanvladimir.revin@gmail.com",
+    "description": "Path of Titans 是一款多人在线恐龙生存视频游戏。在一个由智能AI生物和最多200名其他玩家组成的丰富生态系统中，作为恐龙生存。",
+    "features": null,
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:debian"
+    },
+    "file_denylist": [],
+    "startup": "./AlderonGamesCmd-Linux --game path-of-titans --server true --beta-branch {{BETA_BRANCH}} --auth-token {{AG_AUTH_TOKEN}} --install-dir ./server/ && ./server/PathOfTitansServer.sh {{SERVER_MAP}}?listen?MaxPlayers={{SERVER_MAX_PLAYERS}} -RconPort={{RCON_PORT}} -nullRHI -ServerName={{SERVER_NAME}} -ServerGUID={{SERVER_GUID}} -BranchKey={{BETA_BRANCH}} -Database={{SERVER_DB}} -log",
+    "config": {
+        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-ip\": \"0.0.0.0\",\r\n            \"enable-query\": \"true\",\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"query.port\": \"{{QUERY_PORT}}\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Server ready\"\r\n}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\napt-get update && apt-get install -y --no-install-recommends apt-utils apt-transport-https ca-certificates libunwind8 icu-devtools openssl libkrb5-3 zlib1g libuuid1 dos2unix gnupg gnupg2 debian-archive-keyring gcc g++ lib32gcc-s1 lib32z1 lib32stdc++6 iproute2 gdb libsdl1.2debian libfontconfig libcurl4\r\napt-get autoremove --purge -y\r\nmkdir -p /mnt/server\r\ncd /mnt/server && curl -o AlderonGamesCmd-Linux https://launcher-cdn.alderongames.com/AlderonGamesCmd-Linux-x64\r\nchmod +x /mnt/server/AlderonGamesCmd-Linux\r\nchown -R root:root /mnt\r\nexport HOME=/mnt/server"
+        }
+    },
+    "variables": [
+        {
+            "name": "服务器地图",
+            "description": "",
+            "env_variable": "SERVER_MAP",
+            "default_value": "Island",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "",
+            "env_variable": "SERVER_MAX_PLAYERS",
+            "default_value": "100",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|max:200",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器名称",
+            "description": "",
+            "env_variable": "SERVER_NAME",
+            "default_value": "YoutServerName",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:25",
+            "field_type": "text"
+        },
+        {
+            "name": "GUID",
+            "description": "Use https://guidgenerator.com/",
+            "env_variable": "SERVER_GUID",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:40",
+            "field_type": "text"
+        },
+        {
+            "name": "分支",
+            "description": "在生产环境或演示公共测试之间选择",
+            "env_variable": "BETA_BRANCH",
+            "default_value": "production",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:15",
+            "field_type": "text"
+        },
+        {
+            "name": "数据库模式",
+            "description": "服务器可以使用本地或远程数据库。通过本地或远程指定。除非你计划在服务器之间连接共享角色数据，否则我们建议使用本地数据库。",
+            "env_variable": "SERVER_DB",
+            "default_value": "Local",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:8",
+            "field_type": "text"
+        },
+        {
+            "name": "身份验证令牌",
+            "description": "在此处获取您的认证令牌：https://alderongames.com/oauth/hosting-token！！您需要拥有该游戏！！",
+            "env_variable": "AG_AUTH_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:1500",
+            "field_type": "text"
+        },
+        {
+            "name": "查询端口",
+            "description": "",
+            "env_variable": "QUERY_PORT",
+            "default_value": "7778",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|max:8",
+            "field_type": "text"
+        },
+        {
+            "name": "Rcon端口",
+            "description": "",
+            "env_variable": "RCON_PORT",
+            "default_value": "7779",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|max:8",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/242"
+}

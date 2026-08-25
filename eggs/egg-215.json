@@ -1,0 +1,173 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/215/download/egg-factorio.json"
+    },
+    "exported_at": "2026-08-23T08:16:25+00:00",
+    "name": "Factorio",
+    "author": "parker@parkervcp.com",
+    "description": "原版Factorio服务器。\n\nhttps://www.factorio.com/",
+    "features": null,
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:debian"
+    },
+    "file_denylist": [],
+    "startup": "[ ! -f \"./saves/{{SAVE_NAME}}.zip\" ] && ./bin/x64/factorio --create ./saves/{{SAVE_NAME}}.zip --map-gen-settings data/map-gen-settings.json --map-settings data/map-settings.json; ./bin/x64/factorio --port {{SERVER_PORT}} --server-settings data/server-settings.json --start-server saves/{{SAVE_NAME}}.zip $( [ \"$RCON_ENABLED\" = \"1\" ] && echo \"--rcon-port {{RCON_PORT}} --rcon-password {{RCON_PASSWORD}}\" )",
+    "config": {
+        "files": "{\n    \"data\\/server-settings.json\": {\n        \"parser\": \"json\",\n        \"find\": {\n            \"name\": \"{{server.build.env.SERVER_NAME}}\",\n            \"description\": \"{{server.build.env.SERVER_DESC}}\",\n            \"max_players\": \"{{server.build.env.MAX_SLOTS}}\",\n            \"username\": \"{{server.build.env.SERVER_USERNAME}}\",\n            \"token\": \"{{server.build.env.SERVER_TOKEN}}\",\n            \"autosave_interval\": \"{{server.build.env.SAVE_INTERVAL}}\",\n            \"autosave_slots\": \"{{server.build.env.SAVE_SLOTS}}\",\n            \"afk_autokick_interval\": \"{{server.build.env.AFK_KICK}}\",\n            \"game_password\": \"{{server.build.env.SERVER_PASSWORD}}\"\n        }\n    }\n}",
+        "startup": "{\n    \"done\": \"Hosting game at\"\n}",
+        "logs": "{}",
+        "stop": "/quit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\n# Factorio Installation Script\r\n#\r\n# Server Files: /mnt/server\r\napt update \r\napt install -y curl tar xz-utils jq\r\n\r\nVERSION_JSON=$(curl -sSL https://factorio.com/api/latest-releases)\r\n\r\nlatest_stable=$(echo $VERSION_JSON | jq -r '.stable.headless')\r\nlatest_experimental=$(echo $VERSION_JSON | jq -r '.experimental.headless')\r\n\r\nif [ -z \"${FACTORIO_VERSION}\" ] || [ \"${FACTORIO_VERSION}\" == \"latest\" ]; then\r\n  DL_VERSION=$latest_stable\r\nelif [ \"${FACTORIO_VERSION}\" == \"experimental\" ]; then\r\n  DL_VERSION=$latest_experimental\r\nelse\r\n  DL_VERSION=${FACTORIO_VERSION}\r\nfi\r\n\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\n\r\necho -e \"\\n running 'curl -sL https://www.factorio.com/get-download/${DL_VERSION}/headless/linux64 -o factorio-${DL_VERSION}' \\n\"\r\n\r\ncurl -sL https://www.factorio.com/get-download/${DL_VERSION}/headless/linux64 -o factorio-${DL_VERSION}\r\n\r\ntar -xf factorio-${DL_VERSION} --strip-components=1 -C /mnt/server\r\n\r\nrm factorio-${DL_VERSION}\r\n\r\nif [ -e data/map-gen-settings.json ]; then\r\n    echo \"map-gen exists\"\r\nelse\r\n    echo \"copying map-gen default settings\"\r\n    mv data/map-gen-settings.example.json data/map-gen-settings.json\r\nfi\r\n\r\nif [ -e data/server-settings.json ]; then\r\n    echo \"server settings exists\"\r\nelse\r\n    echo \"copying server default settings\"\r\n    mv data/server-settings.example.json data/server-settings.json\r\nfi\r\n\r\nif [ -e map-settings.json ]; then\r\n    echo \"map settings exists\"\r\nelse\r\n    echo \"copying map default settings\"\r\n    mv data/map-settings.example.json data/map-settings.json\r\nfi\r\n\r\nif [ -e ./saves/${SAVE_NAME}.zip ]; then\r\n    echo \"save file exists\"\r\nelse\r\n    ./bin/x64/factorio --create ./saves/${SAVE_NAME} --map-gen-settings data/map-gen-settings.json --map-settings data/map-settings.json\r\n    chmod o+w ./saves/${SAVE_NAME}.zip\r\nfi\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "挂机踢出",
+            "description": "以分钟为单位指定踢出挂机玩家的时间。0 表示关闭。",
+            "env_variable": "AFK_KICK",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|digits_between:1,3",
+            "field_type": "text"
+        },
+        {
+            "name": "Factorio 版本",
+            "description": "要安装和使用的异星工厂版本。",
+            "env_variable": "FACTORIO_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|between:3,12",
+            "field_type": "text"
+        },
+        {
+            "name": "最大槽位",
+            "description": "服务器允许的总插槽数。",
+            "env_variable": "MAX_SLOTS",
+            "default_value": "20",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|digits_between:1,3",
+            "field_type": "text"
+        },
+        {
+            "name": "RCON 已启用？",
+            "description": "",
+            "env_variable": "RCON_ENABLED",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "RCON密码",
+            "description": "",
+            "env_variable": "RCON_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "RCON端口",
+            "description": "",
+            "env_variable": "RCON_PORT",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|integer",
+            "field_type": "text"
+        },
+        {
+            "name": "自动保存间隔",
+            "description": "自动保存间隔（分钟）",
+            "env_variable": "SAVE_INTERVAL",
+            "default_value": "10",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|digits_between:1,3",
+            "field_type": "text"
+        },
+        {
+            "name": "保存名称",
+            "description": "服务器的保存名称。",
+            "env_variable": "SAVE_NAME",
+            "default_value": "gamesave",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "alpha_dash|between:1,100",
+            "field_type": "text"
+        },
+        {
+            "name": "自动存档槽位",
+            "description": "要保留的自动保存数量。",
+            "env_variable": "SAVE_SLOTS",
+            "default_value": "5",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|digits_between:1,3",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器描述",
+            "description": "游戏描述将显示在列表中。",
+            "env_variable": "SERVER_DESC",
+            "default_value": "Description",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:200",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器名称",
+            "description": "游戏名称，将显示在游戏列表中。",
+            "env_variable": "SERVER_NAME",
+            "default_value": "Factorio Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:100",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器密码",
+            "description": "服务器的密码。",
+            "env_variable": "SERVER_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "max:40",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器令牌",
+            "description": "您的 factorio.com 令牌，这是您的服务器在公共服务器列表中可见所必需的。",
+            "env_variable": "SERVER_TOKEN",
+            "default_value": "undefined",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "alpha_num|max:100",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器用户名",
+            "description": "用于服务器的用户名",
+            "env_variable": "SERVER_USERNAME",
+            "default_value": "unnamed",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:40",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/215"
+}

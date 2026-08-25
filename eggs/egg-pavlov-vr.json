@@ -1,0 +1,95 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/88/download/egg-pavlov-vr.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:15:45+00:00",
+    "name": "Pavlov VR",
+    "author": "admin@devil.wtf",
+    "description": "Pavlov VR 是一款注重社区功能的VR多人射击游戏。核心体验包含真实的换弹机制与快节奏战斗。立即体验当前PC平台最受欢迎的VR射击游戏。",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:ubuntu": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:ubuntu"
+    },
+    "file_denylist": [],
+    "startup": "./Pavlov/Binaries/Linux/PavlovServer-Linux-Shipping  Pavlov -PORT={{SERVER_PORT}} -KEY=\"{{API_KEY}}\"",
+    "config": {
+        "files": "{\r\n    \"Pavlov/Saved/Config/RconSettings.txt\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"Password=\": \"Password={{env.RCON_PASSWORD}}\",\r\n            \"Port=\": \"Port={{env.RCON_PORT}}\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Starting Server Status Helper on Port\"\r\n}",
+        "stop": "^^C"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n# steamcmd Base Installation Script\r\n#\r\n\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd /tmp\r\nmkdir -p /mnt/server/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steamcmd\r\nmkdir -p /mnt/server/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd /mnt/server/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root /mnt\r\nexport HOME=/mnt/server\r\n\r\n## install game using steamcmd\r\n./steamcmd.sh +force_install_dir /mnt/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) ${INSTALL_FLAGS} validate +quit\r\n\r\n## set up 32 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk32\r\ncp -v linux32/steamclient.so ../.steam/sdk32/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk64\r\ncp -v linux64/steamclient.so ../.steam/sdk64/steamclient.so\r\n\r\nchmod +x \"/mnt/server/Pavlov/Binaries/Linux/PavlovServer-Linux-Shipping\"\r\n\r\n# Install Configuration Files\r\nmkdir -p /mnt/server/Pavlov/Saved/Logs\r\nmkdir -p /mnt/server/Pavlov/Saved/Config/LinuxServer\r\nmkdir -p /mnt/server/Pavlov/Saved/maps\r\n\r\n\r\ncd /mnt/server/Pavlov/Saved/Config/LinuxServer\r\nif [ ! -f Game.ini ]; then\r\n    echo -e \"Downloading Pavlov VR Game.ini\"\r\n    curl -ssL -o Game.ini https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/steamcmd_servers/pavlov_vr/Game.ini\r\nfi\r\n\r\ncd /mnt/server/Pavlov/Saved/Config\r\nif [ ! -f RconSettings.txt ]; then\r\n    echo -e \"Downloading Pavlov VR RconSettings.txt\"\r\n    curl -ssL -o RconSettings.txt https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/steamcmd_servers/pavlov_vr/RconSettings.txt\r\nfi\r\n\r\ncd /mnt/server/\r\nif [ -f PavlovServer.sh ]; then\r\n    rm PavlovServer.sh\r\nfi\r\n\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "应用ID",
+            "description": "Pavlov VR 的 Steam 应用 ID",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "622970",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|numeric|in:622970",
+            "field_type": "text"
+        },
+        {
+            "name": "RCON 密码",
+            "description": "为你的RCON配置输入一个密码。",
+            "env_variable": "RCON_PASSWORD",
+            "default_value": "CHANGE_ME",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "RCON 端口",
+            "description": "你的RCON配置端口。",
+            "env_variable": "RCON_PORT",
+            "default_value": "8188",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric",
+            "field_type": "text"
+        },
+        {
+            "name": "自动更新服务器",
+            "description": "这是为了启用服务器的自动更新功能。\n\n默认值为0，设置为1即可更新。",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "Beta ID",
+            "description": "Steam 应用的测试版分支",
+            "env_variable": "SRCDS_BETAID",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|in:,beta_server",
+            "field_type": "text"
+        },
+        {
+            "name": "API 密钥",
+            "description": "为了让你的服务器在服务器列表中显示，现在需要拥有由 vankrupt 颁发的 ApiKey。这是为了防止对主服务器的 DOS 攻击。  \n在此获取：https://pavlov-ms.vankrupt.com/servers/v1/key",
+            "env_variable": "API_KEY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:64",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/88"
+}

@@ -1,0 +1,93 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/198/download/egg-bettercrewlink-server.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:24+00:00",
+    "name": "BetterCrewlink Server",
+    "author": "tobiornotto@gmail.com",
+    "description": "一个为Among Us设计的，使用BetterCrewLink Server支持近距离语音聊天的预设",
+    "features": null,
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:nodejs_16": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:nodejs_16"
+    },
+    "file_denylist": [],
+    "startup": "yarn start",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"<info> BetterCrewLink Server started\"\r\n}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "container": "node:16-bookworm",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n# Server Files: /mnt/server\r\napt update\r\napt install -y git python3 python3-pip build-essential\r\n\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\n\r\nINSTALL_REPO=\"https://github.com/OhMyGuus/BetterCrewLink-server.git\"\r\necho -e Install repo set to ${INSTALL_REPO}\r\necho -e \"/mnt/server is empty.\\ncloning files from repo\"\r\necho -e \"running 'git clone --single-branch --branch ${BRANCH} ${INSTALL_REPO} .'\"\r\ngit clone --single-branch --branch ${BRANCH} ${INSTALL_REPO} .\r\n\r\nif [ -f /mnt/server/package.json ]; then\r\n    /usr/local/bin/yarn install\r\nfi\r\n\r\necho -e \"install complete\"\r\nexit 0"
+        }
+    },
+    "variables": [
+        {
+            "name": "Github 分支",
+            "description": "选择一个可用的BetterCrewLink-server分支。默认为主分支。",
+            "env_variable": "BRANCH",
+            "default_value": "master",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "域",
+            "description": "您的服务器域名或服务器IP地址",
+            "env_variable": "HOSTNAME",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:50",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器名称",
+            "description": "指定你的BetterCrewLink服务器的名称",
+            "env_variable": "NAME",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:75",
+            "field_type": "text"
+        },
+        {
+            "name": "使用HTTPS",
+            "description": "启用https。你必须将privkey.pem和fullchain.pem放在你的当前工作目录中。",
+            "env_variable": "HTTPS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "SSL路径",
+            "description": "SSL证书的替代路径。",
+            "env_variable": "SSLPATH",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:250",
+            "field_type": "text"
+        },
+        {
+            "name": "端口",
+            "description": "选择服务器运行端口",
+            "env_variable": "PORT",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/198"
+}

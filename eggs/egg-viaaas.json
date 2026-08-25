@@ -1,0 +1,60 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/193/download/egg-viaaas.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:06+00:00",
+    "name": "VIAaaS",
+    "author": "regulad@outlook.com",
+    "description": "VIAaaS - ViaVersion 即服务 - 独立 ViaVersion 代理",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17",
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}} -sslPort={{WEBSERVER_PORT}}",
+    "config": {
+        "files": "{\r\n    \"config/viaaas.yml\": {\r\n        \"parser\": \"yaml\",\r\n        \"find\": {\r\n            \"port\": \"{{server.build.default.port}}\",\r\n            \"bind-address\": \"0.0.0.0\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Application started in \"\r\n}",
+        "stop": "end"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:alpine",
+            "entrypoint": "ash",
+            "script": "#!/bin/ash\r\n# VIAaaS Installation Script\r\n#\r\n# Server Files: /mnt/server\r\ncd /mnt/server\r\nwget -O ${SERVER_JARFILE} \"https://jitpack.io/com/github/ViaVersion/VIAaaS/master-SNAPSHOT/VIAaaS-master-SNAPSHOT-all.jar\"\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "VIAaaS JAR 文件",
+            "description": "下载并运行 VIAaaS 时要使用的 JAR 文件名。",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "VIAaaS-all.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Web服务器端口",
+            "description": "监听Web服务器连接的端口。",
+            "env_variable": "WEBSERVER_PORT",
+            "default_value": "25543",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/193"
+}

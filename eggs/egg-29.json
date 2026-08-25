@@ -1,0 +1,125 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/29/download/egg-banana-shooter.json"
+    },
+    "exported_at": "2026-08-23T08:15:51+00:00",
+    "name": "Banana Shooter",
+    "author": "sem@osesem.xyz",
+    "description": "Dave 是一个不断射击敌人并获取他们香蕉的香蕉人，还能使用冲刺、二段跳、抓钩和火箭跳等酷炫机制。如果你正在寻找一款快节奏的射击游戏，这就是你需要的。",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "SteamCMD Debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:debian"
+    },
+    "file_denylist": [],
+    "startup": "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/linux64 && export TERM=dumb && ./BSDS.x86_64 -batchmode -nographics -logFile - +Server {{SERVER_NAME}} +maxplayercount {{MAX_PLAYERS}} +port {{SERVER_PORT}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\n    \"done\": \"Started on port\"\n}",
+        "logs": "{}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\n# Banana Shooter Dedicated Server Installation Script\n#\n# Server Files: /mnt/server\n# Image to install with is 'registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian'\n\n\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\n    echo -e \"\\n--- ERROR ---\"\n    echo -e \"Banana Shooter Dedicated Server requires a Steam account that owns the game.\"\n    echo -e \"Anonymous login will NOT work. Please set STEAM_USER and STEAM_PASS.\\n\"\n    exit 1\nelse\n    echo -e \"user set to ${STEAM_USER}\"\nfi\n\n## download and install steamcmd\ncd /tmp\nmkdir -p /mnt/server/steamcmd\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steamcmd\nmkdir -p /mnt/server/steamapps # Fix steamcmd disk write error when this folder is missing\ncd /mnt/server/steamcmd\n\n# SteamCMD fails otherwise for some reason, even running as root.\n# This is changed at the end of the install process anyways.\nchown -R root:root /mnt\nexport HOME=/mnt/server\n\n## install game using steamcmd\n./steamcmd.sh +force_install_dir /mnt/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) validate +quit\n\n## set up 32 bit libraries\nmkdir -p /mnt/server/.steam/sdk32\ncp -v linux32/steamclient.so ../../.steam/sdk32/steamclient.so\n\n## set up 64 bit libraries\nmkdir -p /mnt/server/.steam/sdk64\ncp -v linux64/steamclient.so ../../.steam/sdk64/steamclient.so\n\nchmod +x /mnt/server/BSDS.x86_64 2>/dev/null\n\necho -e \"\\n--- Banana Shooter Dedicated Server installed successfully ---\\n\"\necho -e \"Config.json will be generated on first launch in Servers/{ServerName}/\"\necho -e \"Set Login_Token in Config.json for community server list visibility.\"\necho -e \"Create a GSLT at: https://steamcommunity.com/dev/managegameservers using AppID 1949740\\n\"\necho \"-----------------------------------------\"\necho \"Installation completed...\"\necho \"-----------------------------------------\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "服务器名称",
+            "description": "服务器标识名称。这决定了Servers/目录中存储配置和存档数据的文件夹名称。请避免使用空格。",
+            "env_variable": "SERVER_NAME",
+            "default_value": "BananaServer",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:64",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "服务器允许的最大玩家数量。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "40",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|between:2,40",
+            "field_type": "text"
+        },
+        {
+            "name": "应用ID",
+            "description": "Banana Shooter 专用服务器的 Steam 应用 ID。请勿更改。",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "2406780",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|numeric|in:2406780",
+            "field_type": "text"
+        },
+        {
+            "name": "Steam 用户",
+            "description": "必需 - 拥有《香蕉射手》的Steam账号。匿名登录将无法使用。",
+            "env_variable": "STEAM_USER",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:64",
+            "field_type": "text"
+        },
+        {
+            "name": "Steam 密码",
+            "description": "必需 - Steam账户的密码。",
+            "env_variable": "STEAM_PASS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:64",
+            "field_type": "text"
+        },
+        {
+            "name": "Steam 验证码",
+            "description": "如果需要，请输入 Steam 令牌 2FA 验证码。可能需要重新安装以输入新验证码。",
+            "env_variable": "STEAM_AUTH",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:10",
+            "field_type": "text"
+        },
+        {
+            "name": "Beta 分支",
+            "description": "Steam应用的测试版分支。留空则安装正式版分支。",
+            "env_variable": "SRCDS_BETAID",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:64",
+            "field_type": "text"
+        },
+        {
+            "name": "Beta 分支密码",
+            "description": "测试版分支的密码，用于私有或封闭测试阶段。如无需密码，请留空。",
+            "env_variable": "SRCDS_BETAPASS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:64",
+            "field_type": "text"
+        },
+        {
+            "name": "自动更新",
+            "description": "启动时自动更新服务器",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/29"
+}

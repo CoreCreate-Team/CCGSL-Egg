@@ -1,0 +1,73 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/208/download/egg-cube-2-sauerbraten.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:21+00:00",
+    "name": "Cube 2: Sauerbraten",
+    "author": "holeintheseat@gmail.com",
+    "description": "Cube 2: Sauerbraten 是一款免费的多人&单人第一人称射击游戏，是 Cube FPS 的续作。与原版 Cube 类似，这款游戏的目标是提供有趣、老式的死亡竞赛玩法，并允许玩家在游戏内合作进行地图/几何编辑。",
+    "features": null,
+    "docker_images": {
+        "Debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:debian"
+    },
+    "file_denylist": [],
+    "startup": "./bin_unix/linux_64_server -j{{SERVER_PORT}} -n{{CUBE_SERVERDESCRIPTION}} -c{{CUBE_MAXPLAYERS}} -m{{CUBE_MASTERSERVER}}  -p{{CUBE_ADMINPASSWORD}}",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"dedicated server started, waiting for clients...\"\r\n}",
+        "stop": "^^C"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash",
+            "script": "#!/bin/bash\r\n# AssaultCube Server Egg (By HoleInTheSeat) <|-|> (https://assault.cubers.net/)\r\n#\r\n# Server Files: /mnt/server\r\n\r\napt update \r\n#######-|Dependencies|-#######\r\napt -y install tar curl bzip2\r\n#######-|Downloading files|-#######\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\necho -e \"\\n\"\r\necho -e \"\\n\"\r\necho -e \"###############################################\"\r\necho -e \"##  Downloading and unarchiving Sauerbraten  ##\"\r\necho -e \"## THIS WILL TAKE A WHILE. PLEASE BE PATIENT ##\"\r\necho -e \"###############################################\"\r\necho -e \"\\n\"\r\necho -e \"\\n\"\r\ncurl -sSL -o sauerbraten_2020_12_29_linux.tar.bz2 https://cfhcable.dl.sourceforge.net/project/sauerbraten/sauerbraten/2020_11_29/sauerbraten_2020_12_29_linux.tar.bz2\r\ntar -xf sauerbraten_2020_12_29_linux.tar.bz2 -strip-components=1\r\nrm sauerbraten_2020_12_29_linux.tar.bz2\r\nchmod +x bin_unix/linux_64_server\r\n\r\n#######-|Alert Completion|-#######\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+        }
+    },
+    "variables": [
+        {
+            "name": "服务器描述",
+            "description": "",
+            "env_variable": "CUBE_SERVERDESCRIPTION",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "将最大客户端数量设置为N。默认值为4。如果你想设置更高，请注意每个额外客户端几乎会使带宽使用量翻倍，因此只有在服务器运行在高速网络连接（而不是你家中的DSL或Cable连接）上时才这样做。",
+            "env_variable": "CUBE_MAXPLAYERS",
+            "default_value": "4",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|max:16",
+            "field_type": "text"
+        },
+        {
+            "name": "主服务器",
+            "description": "设置用于服务器（注册）和客户端（更新）的主服务器为S。（默认：sauerbraten.org）",
+            "env_variable": "CUBE_MASTERSERVER",
+            "default_value": "sauerbraten.org",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "管理员密码",
+            "description": "",
+            "env_variable": "CUBE_ADMINPASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:512",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/208"
+}

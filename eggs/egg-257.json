@@ -1,0 +1,224 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/257/download/egg-venice-unleashed.json"
+    },
+    "exported_at": "2026-08-23T08:16:12+00:00",
+    "name": "Venice Unleashed",
+    "author": "red_thirten@yahoo.com",
+    "description": "Venice Unleashed (VU) 是一个面向社区的《战地3》自定义服务器与模组平台，让您重新掌控自己的游戏体验。此 Egg 需要有效的 VU `server.key` 文件，并且需要将《战地3》客户端文件（来自游戏的合法副本）内部挂载到 `/bf3`。",
+    "features": [],
+    "docker_images": {
+        "Wine Latest (Recommended)": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:wine_latest",
+        "Wine Staging": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:wine_staging"
+    },
+    "file_denylist": [],
+    "startup": "[ -f /bf3/bf3.exe ] || { echo \"BF3 is not mounted properly! Exiting.\"; exit 1; }; [ -f ./vu/instance/server.key ] || { echo \"Missing 'vu/instance/server.key'! Exiting.\"; exit 1; }; tok=\"$LIC_PATH\"/token.txt; [ \"$(cat \"$tok\" 2>/dev/null)\" != \"$EA_TOKEN\" ] && { rm -f \"$LIC_PATH\"/*.dlf; echo \"$EA_TOKEN\" > \"$tok\"; }; if ! compgen -G \"$LIC_PATH\"/*.dlf >/dev/null; then wine ./vu/client/vu.com -gamepath /bf3 -activate -ea_token \"$EA_TOKEN\"; fi; wine ./vu/client/vu.com -gamepath /bf3 -serverInstancePath \"$(winepath -w ~/vu/instance)\" -server -dedicated -headless $( [ {{AUTO_UPDATE}} = 0 ] && echo -noUpdate ) -{{SERVER_FREQUENCY}} -maxPlayers {{MAX_PLAYERS}} -listen 0.0.0.0:{{SERVER_PORT}} -mHarmonyPort {{HARMONY_PORT}} ${RCON_PORT:+-RemoteAdminPort 0.0.0.0:{{RCON_PORT}}} ${JOIN_HOST:+-joinhost {{JOIN_HOST}}} $( [ {{UNLISTED}} = 1 ] && echo -unlisted ) $( [ {{HIGH_RES_TERRAIN}} = 1 ] && echo -highResTerrain ) $( [ {{DISABLE_TERRAIN_INTERP}} = 1 ] && echo -disableTerrainInterp ) $( [ {{SKIP_CHECKSUM}} = 1 ] && echo -skipChecksum )",
+    "config": {
+        "files": "{\n    \"vu/instance/Admin/Startup.txt\": {\n        \"parser\": \"file\",\n        \"find\": {\n            \"admin.password\": \"admin.password \\\"{{server.build.env.RCON_PASSWORD}}\\\"\",\n            \"vars.serverName\": \"vars.serverName \\\"{{server.build.env.SERVER_NAME}}\\\"\",\n            \"vars.gamePassword\": \"vars.gamePassword \\\"{{server.build.env.SERVER_PASSWORD}}\\\"\"\n        }\n    }\n}",
+        "startup": "{\n    \"_comment\": \"'now accepting connections' with required Wine control characters\",\n    \"done\": \"n\\u001b[?25h\\u001b[?25lo\\u001b[?25h\\u001b[?25lw\\u001b[?25h\\u001b[?25l\\u001b[K\\u001b[1C\\u001b[?25h\\u001b[?25la\\u001b[?25h\\u001b[?25lc\\u001b[?25h\\u001b[?25lc\\u001b[?25h\\u001b[?25le\\u001b[?25h\\u001b[?25lp\\u001b[?25h\\u001b[?25lt\\u001b[?25h\\u001b[?25li\\u001b[?25h\\u001b[?25ln\\u001b[?25h\\u001b[?25lg\\u001b[?25h\\u001b[?25l\\u001b[K\\u001b[1C\\u001b[?25h\\u001b[?25lc\\u001b[?25h\\u001b[?25lo\\u001b[?25h\\u001b[?25ln\\u001b[?25h\\u001b[?25ln\\u001b[?25h\\u001b[?25le\\u001b[?25h\\u001b[?25lc\\u001b[?25h\\u001b[?25lt\\u001b[?25h\\u001b[?25li\\u001b[?25h\\u001b[?25lo\\u001b[?25h\\u001b[?25ln\\u001b[?25h\\u001b[?25ls\"\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\n\n# File: Pterodactyl Venice Unleashed Egg - egg-pterodactyl-venice-unleashed.json\n# Authors: Red-Thirten\n# Date: 2026/05/08\n# License: MIT License\n\nexport HOME=/mnt/server\n\n[ ! -d $HOME ] && mkdir $HOME\ncd $HOME\n\n# Remove old installation if present (except for VU instance folder to keep configs)\n[ -d .cache ] && rm -rf .cache\n[ -d .config ] && rm -rf .config\n[ -d .local ] && rm -rf .local\n[ -d .wine ] && rm -rf .wine\n[ -f .wget-hsts ] && rm .wget-hsts\n[ -d vu/client ] && rm -rf vu/client\n\n# Make VU required directories\nmkdir -p vu/{client,instance}\nmkdir -p \"${LIC_PATH}\"\n\n# Validate VU download URL\nif ! curl --silent --head --fail ${DOWNLOAD_URL} > /dev/null; then\n    echo -e \"\\nThe VU Server Download URL is unreachable: ${DOWNLOAD_URL}\\n\"\n    exit 1\nfi\n\n# Download, unzip, and verify VU server files\ncd $HOME/vu/client\necho -e \"Downloading VU server files...\"\ncurl -L ${DOWNLOAD_URL} -o ${DOWNLOAD_URL##*/}\necho -e \"Unzipping VU server files...\"\nunzip ${DOWNLOAD_URL##*/}\nif [ ! -f vu.com ]; then\n    echo -e \"\\nFailed to download/install VU server files from: ${DOWNLOAD_URL}\\n\"\n    exit 1\nelse\n    rm ${DOWNLOAD_URL##*/}\nfi\n\n# Create default config files if they are missing\ncd $HOME/vu/instance\nmkdir -p Admin/Mods\ncd Admin\n[ ! -f BanList.txt ] && touch BanList.txt\n[ ! -f ModList.txt ] && touch ModList.txt\nif [[ ! -f MapList.txt ]]; then\n    cat > MapList.txt <<EOF\n# -------------------------------------------------------------------------------------------------------------------------\n# This file defines the map rotation of the server. This means that it tells the server which map to load first and\n# on which gamemode, how many rounds to run, and what's the next map to load once the game ends.\n# \n# Every map is specified in a new line in the following format:\n# MapID GamemodeID Rounds\n# \n# Full list of the map and gamemode IDs:\n# https://docs.veniceunleashed.net/hosting/maps\n# -------------------------------------------------------------------------------------------------------------------------\n\nMP_Subway ConquestLarge0 1\nMP_013 TeamDeathMatch0 1\nEOF\nfi\nif [[ ! -f Startup.txt ]]; then\n    cat > Startup.txt <<EOF\n# -------------------------------------------------------------------------------------------------------------------------\n# This file is used to configure to the server upon startup. This is done by using specific configuration variables\n# followed by a relevant value. Each variable is specified in a new line.\n# \n# Full list of configuration variables and commands:\n# https://docs.veniceunleashed.net/hosting/commands\n# https://github.com/dcodeIO/BattleCon/blob/master/eadocs/BF3/BF3%20PC%20Server%20Remote%20Administration%20Protocol.pdf\n# -------------------------------------------------------------------------------------------------------------------------\n\n# These variables are managed by the panel. Do not change or remove them!\nadmin.password \"${RCON_PASSWORD}\"\nvars.serverName \"${SERVER_NAME}\"\nvars.gamePassword \"${SERVER_PASSWORD}\"\n\n# Add additional variables below if desired\n\nEOF\nfi\n\n\necho -e \"\\nVU Successfully Installed!\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "/bin/bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "[主机] Harmony 端口",
+            "description": "VU服务器应监听Monitored Harmony连接所需的端口。",
+            "env_variable": "HARMONY_PORT",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|integer|between:1024,65536",
+            "field_type": "text"
+        },
+        {
+            "name": "[主机] 加入主机",
+            "description": "指定客户端用于连接此服务器的主机名（由 Zeus 主服务器公告）。对于使用 DDNS 的主机，以及通过 DNS 重定向连接的局域网客户端（本地连接的唯一方式）非常有用。主机名不应包含 \"http[s]://\" 前缀。留空则使用公网 IP。",
+            "env_variable": "JOIN_HOST",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "EA认证令牌",
+            "description": "可以在满足以下条件的本地 Windows 计算机上获取：已安装并运行 EA App / Origin，已安装 BF3，已安装 VU，并且 VU 账户已关联 EA/Origin 账户。运行开始菜单中的“Activate BF3”快捷方式，或在命令提示符（当前工作目录必须为 VU 客户端文件夹）中运行 `vu.exe -activate -lsx`。复制显示的令牌并粘贴到此位置。注意：此令牌偶尔会过期，导致服务器启动时崩溃。如果发生这种情况，只需重新生成一个新令牌并粘贴至此即可。",
+            "env_variable": "EA_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "自动更新",
+            "description": "启用VU自动更新器。（请谨慎使用；有报告称，如果有更新，这有时会导致服务器在启动时崩溃）",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器名称",
+            "description": "服务器的名称，它将出现在主服务器列表中。",
+            "env_variable": "SERVER_NAME",
+            "default_value": "My incredible VU server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:63",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器密码",
+            "description": "客户端加入服务器时必须输入的密码。留空则无密码。",
+            "env_variable": "SERVER_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:16",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "设置允许的最大玩家数，该数值由 vars.maxPlayers 与 vars.maxSpectators 共同设定。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "64",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:1",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器频率",
+            "description": "30' = 30Hz（默认） | 'high60' = 60Hz 高频模式 | 'high120' = 120Hz 高频模式",
+            "env_variable": "SERVER_FREQUENCY",
+            "default_value": "30",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:30,high60,high120",
+            "field_type": "text"
+        },
+        {
+            "name": "[RCON] RCON 端口",
+            "description": "可选端口，用于通过RCON连接到服务器（推荐客户端为Procon）。留空以禁用RCON。",
+            "env_variable": "RCON_PORT",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "nullable|integer|between:1024,65536",
+            "field_type": "text"
+        },
+        {
+            "name": "[RCON] RCON 密码",
+            "description": "用于RCON身份验证的密码。（连接客户端时无需用户名，可留空）。",
+            "env_variable": "RCON_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:16",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 禁用服务器列表",
+            "description": "使服务器不在主服务器列表中显示。未列出的服务器只能通过 `connect` 控制台命令或 `vu://join/server-id` URL方案加入，该方案也可以作为启动参数添加到 vu.exe 中，以便在客户端加载后立即自动加入。",
+            "env_variable": "UNLISTED",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 启用高分辨率地形",
+            "description": "用于将地图扩展到其原始游戏区域之外。",
+            "env_variable": "HIGH_RES_TERRAIN",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 禁用地形插值",
+            "description": "禁用不同地形LOD之间的插值。",
+            "env_variable": "DISABLE_TERRAIN_INTERP",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 跳过校验和",
+            "description": "禁用客户端连接时的世界校验和验证。",
+            "env_variable": "SKIP_CHECKSUM",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[系统] VU 服务器下载 URL",
+            "description": "VU提供的用于下载压缩服务器文件的官方URL。（除非你知道自己在做什么，否则不应更改。）",
+            "env_variable": "DOWNLOAD_URL",
+            "default_value": "https://veniceunleashed.net/files/vu.zip",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "[系统] EA 许可证路径",
+            "description": "存储用于VU服务器激活的EA `.dlf`许可证文件的路径。不应更改。",
+            "env_variable": "LIC_PATH",
+            "default_value": "./.wine/drive_c/ProgramData/Electronic Arts/EA Services/License",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:./.wine/drive_c/ProgramData/Electronic Arts/EA Services/License",
+            "field_type": "text"
+        },
+        {
+            "name": "[系统] WINEDEBUG",
+            "description": "设置 Wine 调试级别。很少需要更改。",
+            "env_variable": "WINEDEBUG",
+            "default_value": "-all",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "[系统] WINETRICKS_RUN",
+            "description": "通过 winetricks 安装所需的 Visual C++ 2008 运行时。不应更改。",
+            "env_variable": "WINETRICKS_RUN",
+            "default_value": "vcrun2008",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:vcrun2008",
+            "field_type": "text"
+        },
+        {
+            "name": "[系统] WINEARCH",
+            "description": "设置Wine前缀以使用WoW64（Windows 64位上的Windows 32位），这是VU所必需的。不应更改。",
+            "env_variable": "WINEARCH",
+            "default_value": "wow64",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:wow64",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/257"
+}

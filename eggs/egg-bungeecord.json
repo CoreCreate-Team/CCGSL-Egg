@@ -1,0 +1,61 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/190/download/egg-bungeecord.json"
+    },
+    "exported_at": "2026-08-23T08:16:06+00:00",
+    "name": "Bungeecord",
+    "author": "panel@example.com",
+    "description": "长久以来，我的世界服务器拥有者一直怀揣着一个梦想：找到一种免费、简单且可靠的方式将多个我的世界服务器连接在一起。BungeeCord 正是实现这一梦想的答案。无论你是希望将多种游戏模式串联起来的小型服务器，还是像 ShotBow 网络这样的服务器所有者，BungeeCord 都是你的理想解决方案。借助 BungeeCord，你将能够充分释放你社区的潜力。",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "Java 21": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_21",
+        "Java 17": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17",
+        "Java 16": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16",
+        "Java 11": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11",
+        "Java 8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{\n    \"config.yml\": {\n        \"parser\": \"yaml\",\n        \"find\": {\n            \"listeners[0].query_port\": \"{{server.build.default.port}}\",\n            \"listeners[0].host\": \"0.0.0.0:{{server.build.default.port}}\",\n            \"servers.*.address\": {\n                \"regex:^(127\\\\.0\\\\.0\\\\.1|localhost)(:\\\\d{1,5})?$\": \"{{config.docker.interface}}$2\"\n            }\n        }\n    }\n}",
+        "startup": "{\n    \"done\": \"Listening on \"\n}",
+        "logs": "[]",
+        "stop": "end"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/ash\n# Bungeecord Installation Script\n#\n# Server Files: /mnt/server\n\ncd /mnt/server\n\nif [ -z \"${BUNGEE_VERSION}\" ] || [ \"${BUNGEE_VERSION}\" == \"latest\" ]; then\n    BUNGEE_VERSION=\"lastStableBuild\"\nfi\n\ncurl -sSL -o ${SERVER_JARFILE} https://ci.md-5.net/job/BungeeCord/${BUNGEE_VERSION}/artifact/bootstrap/target/BungeeCord.jar",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:alpine",
+            "entrypoint": "ash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Bungeecord Jar 文件",
+            "description": "运行Bungeecord时使用的Jarfile名称。",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "bungeecord.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:/^([\\w\\d._-]+)(\\.jar)$/",
+            "field_type": "text"
+        },
+        {
+            "name": "Bungeecord 版本",
+            "description": "要下载和使用的Bungeecord版本。",
+            "env_variable": "BUNGEE_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|alpha_num|between:1,6",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/190"
+}

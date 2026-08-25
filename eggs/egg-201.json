@@ -1,0 +1,163 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/201/download/egg-archean.json"
+    },
+    "exported_at": "2026-08-23T08:16:23+00:00",
+    "name": "Archean",
+    "author": "tueem@tomatentum.net",
+    "description": "Archean 邀请你在创造沙盒模式中独自或与朋友一起释放你的创造力。使用可自定义的模块化方块设计并建造载具、基地、火箭、空间站等等。利用组件创造独特配置，编写它们的行为，探索没有限制的环境。测试你的建造，完善你的设计，挑战物理定律。Archean 是一款专注于工程与建造的正在开发中的游戏。",
+    "features": [],
+    "docker_images": {
+        "Ubuntu": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:ubuntu"
+    },
+    "file_denylist": [],
+    "startup": "echo \"$ADMINS\" > \"archean-data/server/admins.txt\"; cd /home/container/archean-server/; ./Archean server",
+    "config": {
+        "files": "{\n\t\"archean-data/server/server.ini\": {\n\t\t\"parser\": \"ini\",\n\t\t\"find\": {\n\t\t\t\"server.server_public_name\": \"{{env.SERVER_NAME}}\",\n\t\t\t\"server.game_mode\": \"{{env.GAME_MODE}}\",\n\t\t\t\"server.server_online\": \"{{env.ONLINE_MODE}}\",\n\t\t\t\"server.max_simultaneous_players\": \"{{env.MAX_PLAYERS}}\",\n\t\t\t\"server.password\": \"{{env.PASSWORD}}\",\n\t\t\t\"networking.listen_port\": \"{{server.build.default.port}}\",\n\t\t\t\"game.spawn\": \"{{env.SPAWN_PLANET}}\",\n\t\t\t\"game.world\": \"{{env.WORLD_NAME}}\",\n\t\t\t\"game.auto_save_interval_seconds\": \"{{env.AUTOSAVE_INTERVAL}}\",\n\t\t\t\"game.updates_per_second\": \"{{env.UPDATES_PER_SECOND}}\",\n\t\t\t\"game.physics_steps_per_update\": \"{{env.PHYSICS_UPDATES_PER_UPDATE}}\"\n\t\t}\n\t}\n}",
+        "startup": "{\n\"done\": \"Server started\"\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\n\ncd /mnt/server\n\n## add git ending if it's not on the address\nif [[ ${GIT_ADDRESS} != *.git ]]; then\n    GIT_ADDRESS=${GIT_ADDRESS}.git\nfi\n\n## pull git bot repo with update functionality\nif [ \"$(ls -A /mnt/server/archean-server)\" ]; then\n    echo -e \"/mnt/server/archean-server directory is not empty.\"\n    cd archean-server/\n    if [ -d .git ]; then\n        echo -e \".git directory exists\"\n        if [ -f .git/config ]; then\n            echo -e \"loading info from git config\"\n            ORIGIN=$(git config --get remote.origin.url)\n        else\n            echo -e \"files found with no git config\"\n            echo -e \"closing out without touching things to not break anything\"\n            exit 10\n        fi\n    fi\n\n    if [ \"${ORIGIN}\" == \"${GIT_ADDRESS}\" ]; then\n        echo \"pulling latest from github\"\n        git pull\n    fi\nelse\n    echo -e \"/mnt/server/archean-server is empty.\\ncloning files into repo\"\n    if [ -z ${BRANCH} ]; then\n        echo -e \"cloning default branch\"\n        git clone --single-branch ${GIT_ADDRESS} archean-server/\n    else\n        echo -e \"cloning ${BRANCH}'\"\n        git clone --single-branch --branch ${BRANCH} ${GIT_ADDRESS} archean-server/\n    fi\nfi\n\ncurl -o \"archean-data/server/server.ini\" --create-dirs https://raw.githubusercontent.com/pelican-eggs/games-standalone/refs/heads/main/archean/server.ini\n\necho ******************************************\necho Installation Completed\necho ******************************************",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "服务器名称",
+            "description": "服务器名称，显示在公共服务器页面等地方。",
+            "env_variable": "SERVER_NAME",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "string|required",
+            "field_type": "text"
+        },
+        {
+            "name": "游戏模式",
+            "description": "改变服务器的游戏模式在冒险和创造之间。\n0 = 创造\n1 = 冒险",
+            "env_variable": "GAME_MODE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "string|in:0,1",
+            "field_type": "text"
+        },
+        {
+            "name": "在线模式",
+            "description": "服务器是否公开可见。",
+            "env_variable": "ONLINE_MODE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "服务器同一时间可加入的最大玩家数量。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "4",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer",
+            "field_type": "text"
+        },
+        {
+            "name": "密码",
+            "description": "玩家加入服务器所需输入的密码",
+            "env_variable": "PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "出生行星",
+            "description": "玩家初始将出生在该星球上。",
+            "env_variable": "SPAWN_PLANET",
+            "default_value": "earth",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|in:earth,moon",
+            "field_type": "text"
+        },
+        {
+            "name": "自动保存间隔",
+            "description": "自动服务器保存间隔",
+            "env_variable": "AUTOSAVE_INTERVAL",
+            "default_value": "30",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 每秒更新次数",
+            "description": "此设置只能由高级用户更改。更改服务器每秒更新的次数。",
+            "env_variable": "UPDATES_PER_SECOND",
+            "default_value": "25",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 每次更新的物理步数",
+            "description": "此设置仅应由高级用户更改。更改每次游戏更新时物理计算的计算次数。",
+            "env_variable": "PHYSICS_UPDATES_PER_UPDATE",
+            "default_value": "8",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer",
+            "field_type": "text"
+        },
+        {
+            "name": "管理员",
+            "description": "一个由获得管理员权限的用户的Steam ID组成的列表，每行一个。\n访问 https://steamid.io 获取Steam ID。",
+            "env_variable": "ADMINS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "string|nullable",
+            "field_type": "text"
+        },
+        {
+            "name": "世界名称",
+            "description": "要使用的世界目录的名称。",
+            "env_variable": "WORLD_NAME",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "string|nullable",
+            "field_type": "text"
+        },
+        {
+            "name": "Git地址",
+            "description": "",
+            "env_variable": "GIT_ADDRESS",
+            "default_value": "https://github.com/batcholi/Archean_game_linux.git",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "string|required",
+            "field_type": "text"
+        },
+        {
+            "name": "分支",
+            "description": "",
+            "env_variable": "BRANCH",
+            "default_value": "alpha",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "string|required",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/201"
+}

@@ -1,0 +1,113 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/207/download/egg-assaultcube.json"
+    },
+    "exported_at": "2026-08-23T08:16:21+00:00",
+    "name": "AssaultCube",
+    "author": "holeintheseat@gmail.com",
+    "description": "AssaultCube是一款免费的、多人的、第一人称射击游戏，基于CUBE引擎。\n\n设置在真实环境中，具有快速、街机风格的游戏性，它令人上瘾且有趣！",
+    "features": null,
+    "docker_images": {
+        "Debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:debian"
+    },
+    "file_denylist": [],
+    "startup": "./bin_unix/linux_64_server -Y{{ASSAULT_SERVER_KEY}} -n\"{{ASSAULT_SERVER_DESCRIPTION}}\" -o\"{{ASSAULT_SERVER_MOTD}}\" -c{{ASSAULT_SERVER_MAXPLAYERS}} -x{{ASSAULT_SERVER_ADMINPASSWORD}} -f{{SERVER_PORT}} -p{{ASSAULT_SERVER_PLAYERPASSWORD}} -m{{ASSAULT_SERVER_MASTERSERVER}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"dedicated server started, waiting for clients...\"\r\n}",
+        "logs": "{}",
+        "stop": "^^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\n# AssaultCube Server Egg (By HoleInTheSeat) <|-|> (https://assault.cubers.net/)\r\n#\r\n# Server Files: /mnt/server\r\n\r\n#######-|Dependencies|-#######\r\napt update\r\napt -y install tar make bzip2 build-essential clang libclang-dev libclang1 llvm llvm-dev clang-tools libz-dev curl jq\r\n\r\n#######-|Downloading files|-#######\r\ncd /mnt/server\r\n## get release info and download links\r\n\r\nLATEST_JSON=$(curl --silent \"https://api.github.com/repos/assaultcube/AC/releases/latest\")\r\nRELEASES=$(curl --silent \"https://api.github.com/repos/assaultcube/AC/releases\")\r\nMATCH=tar.bz2\r\n\r\nif [ -z \"${VERSION}\" ] || [ \"${VERSION}\" == \"latest\" ]; then\r\n    DOWNLOAD_URL=$(echo ${LATEST_JSON} | jq .assets | jq -r .[].browser_download_url | grep -i ${MATCH})\r\nelse\r\n    VERSION_CHECK=$(echo ${RELEASES} | jq -r --arg VERSION \"${VERSION}\" '.[] | select(.tag_name==$VERSION) | .tag_name')\r\n    if [ \"${VERSION}\" == \"${VERSION_CHECK}\" ]; then\r\n        DOWNLOAD_URL=$(echo ${RELEASES} | jq -r --arg VERSION \"${VERSION}\" '.[] | select(.tag_name==$VERSION) | .assets[].browser_download_url' | grep -i ${MATCH})\r\n    else\r\n        echo -e \"defaulting to latest release\"\r\n        DOWNLOAD_URL=$(echo ${LATEST_JSON} | jq .assets | jq -r .[].browser_download_url | head -1)\r\n    fi\r\nfi\r\n\r\n\r\ncurl -sSL -o AssaultCube.tar.bz2 ${DOWNLOAD_URL}\r\ntar -xf AssaultCube.tar.bz2\r\nrm AssaultCube.tar.bz2\r\n\r\n#######-|Setting Up Server|-#######\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\nrm -rf bin_win32/ *.sh\r\n\r\nif [ \"$(uname -m)\" = \"x86_64\" ]; then\r\n    echo -e \"x86 System\"\r\nelse\r\n    cd /mnt/server/source/src\r\n    make server_install\r\nfi\r\n#######-|Insert Server Authkey|-#######\r\ncd /mnt/server\r\nsed -i 's/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/{{ASSAULT_SERVER_KEY}}/' ./config/servercmdline.txt\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "服务器认证密钥",
+            "description": "您必须提供自己的密钥，以便服务器在主服务器上注册。  \n要生成密钥，您可以运行客户端并执行命令：\n\n            authkey new server \n        \n参见：(https://assault.cubers.net/docs/server.html)",
+            "env_variable": "ASSAULT_SERVER_KEY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:64",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器描述",
+            "description": "",
+            "env_variable": "ASSAULT_SERVER_DESCRIPTION",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "每日消息",
+            "description": "",
+            "env_variable": "ASSAULT_SERVER_MOTD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "设置可加入玩家数量的限制（最大16）",
+            "env_variable": "ASSAULT_SERVER_MAXPLAYERS",
+            "default_value": "16",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|integer|max:16",
+            "field_type": "text"
+        },
+        {
+            "name": "管理员密码",
+            "description": "",
+            "env_variable": "ASSAULT_SERVER_ADMINPASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:512|min:5",
+            "field_type": "text"
+        },
+        {
+            "name": "玩家密码",
+            "description": "加入服务器需要密码。",
+            "env_variable": "ASSAULT_SERVER_PLAYERPASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "主服务器",
+            "description": "强制服务器使用不同主服务器的主机名或IP地址进行注册。\n默认值为 ms.cubers.net\n如果希望隐藏您的服务器且不向主服务器报告，请使用 -mlocalhost",
+            "env_variable": "ASSAULT_SERVER_MASTERSERVER",
+            "default_value": "ms.cubers.net",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "版本",
+            "description": "你想要下载的引擎版本。",
+            "env_variable": "VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/207"
+}

@@ -1,0 +1,73 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/250/download/egg-tshock-legacy.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:15+00:00",
+    "name": "tshock legacy",
+    "author": "parker@parkervcp.com",
+    "description": "TShock 模组的泰拉瑞亚服务器。\n\nhttps://tshock.co/",
+    "features": null,
+    "docker_images": {
+        "mono": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:mono_latest"
+    },
+    "file_denylist": [],
+    "startup": "mono TerrariaServer.exe -ip 0.0.0.0 -port {{SERVER_PORT}} -maxplayers {{MAX_PLAYERS}} -world {{WORLD_NAME}}.wld -autocreate {{WORLD_SIZE}}",
+    "config": {
+        "files": "{}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \"Type 'help' for a list of commands\"\r\n}",
+        "stop": "exit"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "/bin/bash",
+            "script": "#!/bin/bash\r\n# Vanilla tModloader Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n## install packages to get version and download links\r\napt update\r\napt install -y curl wget jq file unzip\r\n\r\n\r\n## get release info and download links\r\nLATEST_JSON=$(curl --silent \"https://api.github.com/repos/Pryaxis/TShock/releases/latest\")\r\nRELEASES=$(curl --silent \"https://api.github.com/repos/Pryaxis/TShock/releases\")\r\n\r\nif [ -z \"$TSHOCK_VERSION\" ] || [ \"$TSHOCK_VERSION\" == \"latest\" ]; then\r\n    DOWNLOAD_LINK=$(echo $LATEST_JSON | jq .assets | jq -r .[].browser_download_url)\r\nelse\r\n    VERSION_CHECK=$(echo $RELEASES | jq -r --arg VERSION \"$TSHOCK_VERSION\" '.[] | select(.tag_name==$VERSION) | .tag_name')\r\n    if [ \"$TSHOCK_VERSION\" == \"$VERSION_CHECK\" ]; then\r\n        DOWNLOAD_LINK=$(echo $RELEASES | jq -r --arg VERSION \"$TSHOCK_VERSION\" '.[] | select(.tag_name==$VERSION) | .assets[].browser_download_url')\r\n    else\r\n        echo -e \"defaulting to latest release\"\r\n        DOWNLOAD_LINK=$(echo $LATEST_JSON | jq .assets | jq -r .[].browser_download_url)\r\n    fi\r\nfi\r\n\r\n## mkdir and cd to /mnt/server/\r\nmkdir -p /mnt/server\r\n\r\ncd /mnt/server\r\n\r\n## download release\r\necho -e \"running: wget $DOWNLOAD_LINK\"\r\nwget $DOWNLOAD_LINK\r\n\r\nFILETYPE=$(file -F ',' ${DOWNLOAD_LINK##*/} | cut -d',' -f2 | cut -d' ' -f2)\r\nif [ \"$FILETYPE\" == \"gzip\" ]; then\r\n    tar xzvf ${DOWNLOAD_LINK##*/}\r\nelif [ \"$FILETYPE\" == \"Zip\" ]; then\r\n    unzip -o ${DOWNLOAD_LINK##*/}\r\nelse\r\n    echo -e \"unknown filetype. Exeting\"\r\n    exit 2 \r\nfi\r\n\r\necho -e \"install complete\""
+        }
+    },
+    "variables": [
+        {
+            "name": "最大玩家数",
+            "description": "服务器能容纳的最大玩家数量。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "8",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|digits_between:1,3",
+            "field_type": "text"
+        },
+        {
+            "name": "世界大小",
+            "description": "定义世界的尺寸。3种尺寸：1（小型）、2（中型）、3（大型）。",
+            "env_variable": "WORLD_SIZE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|digits_between:1,3",
+            "field_type": "text"
+        },
+        {
+            "name": "世界名称",
+            "description": "世界文件的名称。",
+            "env_variable": "WORLD_NAME",
+            "default_value": "world",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Tshock 版本",
+            "description": "将要安装的tshock版本。当前最新可用版本是：v4.5.18!",
+            "env_variable": "TSHOCK_VERSION",
+            "default_value": "v4.5.18",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/250"
+}

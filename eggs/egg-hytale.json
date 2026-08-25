@@ -1,0 +1,223 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/227/download/egg-hytale.json"
+    },
+    "exported_at": "2026-08-23T08:16:29+00:00",
+    "name": "Hytale",
+    "author": "161775222+JoanFo1456@users.noreply.github.com",
+    "description": "开始一场既适合创造又适合游玩的冒险。Hytale将沙盒的自由与RPG的推进力融为一体：探索一个程序生成的充满地牢、秘密和各类生物的世界，然后用方块一块块地塑造它。",
+    "features": null,
+    "docker_images": {
+        "Hytale": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/games:hytale"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar HytaleServer.jar --bind 0.0.0.0:{{SERVER_PORT}} --assets ../Assets.zip",
+    "config": {
+        "files": "[]",
+        "startup": "{\n    \"done\": \"Hytale Server Booted!\"\n}",
+        "logs": "[]",
+        "stop": "stop"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\nset -e\n\necho '============================================'\necho 'Hytale Server Installation'\necho '============================================'\n\necho '[1/2] Creating directories...'\nmkdir -p /mnt/server/.tmp\nmkdir -p /mnt/server/Backups\nmkdir -p /mnt/server/Server/mods\nmkdir -p /mnt/server/Server/earlyplugins\nmkdir -p /mnt/server/.server-backups/release\nmkdir -p /mnt/server/.server-backups/pre-release\necho '  ✓ Directories created'\n\necho '[2/2] Creating config.json...'\ncat > /mnt/server/Server/config.json << 'EOF'\n{\n  \"Version\": 4,\n  \"ServerName\": \"Hytale Server\",\n  \"MOTD\": \"\",\n  \"Password\": \"\",\n  \"MaxPlayers\": 20,\n  \"MaxViewRadius\": 12,\n  \"Defaults\": {\n    \"World\": \"default\",\n    \"GameMode\": \"Adventure\"\n  },\n  \"ConnectionTimeouts\": {\n    \"InitialTimeout\": \"PT1M\",\n    \"AuthTimeout\": \"PT1M30S\"\n  },\n  \"RateLimit\": {},\n  \"Modules\": {},\n  \"LogLevels\": {\n    \"AssetModule|P\": \"SEVERE\",\n    \"AssetRegistryLoader\": \"SEVERE\",\n    \"AssetStore|AssignmentsAsset\": \"SEVERE\",\n    \"AssetStore|BiomeAsset\": \"SEVERE\",\n    \"AssetStore|BlockType\": \"SEVERE\",\n    \"AssetStore|CustomConnectedBlockTemplateAsset\": \"SEVERE\",\n    \"AssetStore|EntityEffect\": \"SEVERE\",\n    \"AssetStore|Environment\": \"SEVERE\",\n    \"AssetStore|GameplayConfig\": \"SEVERE\",\n    \"AssetStore|Interaction\": \"SEVERE\",\n    \"AssetStore|Item\": \"SEVERE\",\n    \"AssetStore|ModelVFX\": \"SEVERE\",\n    \"AssetStore|ParticleSystem\": \"SEVERE\",\n    \"AssetStore|PrefabListAsset\": \"SEVERE\",\n    \"AssetStore|ScriptedBrushAsset\": \"SEVERE\",\n    \"AssetStore|WorldStructureAsset\": \"SEVERE\",\n    \"BarterShopState\": \"SEVERE\",\n    \"BlockSetModule|P\": \"SEVERE\",\n    \"BuilderToolsPacketHandler\": \"SEVERE\",\n    \"CertificateUtil\": \"SEVERE\",\n    \"CollisionModule|P\": \"SEVERE\",\n    \"CommonAssetModule|P\": \"SEVERE\",\n    \"ConsoleModule|P\": \"SEVERE\",\n    \"EncryptedAuthCredentialStore\": \"SEVERE\",\n    \"Entity\": \"SEVERE\",\n    \"HandshakeHandler\": \"SEVERE\",\n    \"Hytale\": \"SEVERE\",\n    \"HytaleGenerator\": \"SEVERE\",\n    \"HytaleGenerator|P\": \"SEVERE\",\n    \"HytaleServer\": \"INFO\",\n    \"I18nModule|P\": \"SEVERE\",\n    \"JWTValidator\": \"SEVERE\",\n    \"LoginTiming\": \"SEVERE\",\n    \"MacroCommandBase\": \"SEVERE\",\n    \"NPC|P\": \"SEVERE\",\n    \"PasswordPacketHandler\": \"SEVERE\",\n    \"PathWatcherThread\": \"SEVERE\",\n    \"PlayerSavingSystems\": \"SEVERE\",\n    \"PluginExample|P\": \"INFO\",\n    \"PluginManager\": \"INFO\",\n    \"QUICTransport\": \"SEVERE\",\n    \"SERR\": \"SEVERE\",\n    \"ServerAuthManager\": \"SEVERE\",\n    \"ServerManager|P\": \"SEVERE\",\n    \"SessionServiceClient\": \"SEVERE\",\n    \"Shop|P\": \"SEVERE\",\n    \"Spawning|P\": \"SEVERE\",\n    \"Teleport|P\": \"SEVERE\",\n    \"Universe|P\": \"SEVERE\",\n    \"World|default\": \"SEVERE\",\n    \"World|default|M\": \"SEVERE\",\n    \"WorldGenerator\": \"SEVERE\",\n    \"WorldMapTracker\": \"SEVERE\"\n  },\n  \"Mods\": {},\n  \"DisplayTmpTagsInStrings\": false,\n  \"PlayerStorage\": {\n    \"Type\": \"Hytale\"\n  },\n  \"Update\": {}\n}\nEOF\necho '  ✓ config.json created'\n\necho 'Installation complete!'\necho '============================================'\necho 'Installed components:'\necho '  - Base directories'\necho '  - config.json'\necho '============================================'",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "自动更新",
+            "description": "启动时自动更新游戏文件。",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "补丁线",
+            "description": "服务器分支偏好，config.json中的Update.Patchline会覆盖此设置。",
+            "env_variable": "PATCHLINE",
+            "default_value": "release",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:release,pre-release",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器版本",
+            "description": "运行的版本：最新版、上一个版或特定版本。",
+            "env_variable": "SERVER_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "预认证",
+            "description": "在服务器启动前通过OAuth2进行预认证。",
+            "env_variable": "HYTALE_API_AUTH",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "启用世界备份",
+            "description": "启用游戏服务器的自动世界备份。",
+            "env_variable": "ENABLE_WORLD_BACKUP",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "启用服务器备份",
+            "description": "在更新或补丁线更改时存储先前服务器版本的备份。",
+            "env_variable": "ENABLE_SERVER_BACKUP",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器备份保留",
+            "description": "每个补丁线保留的服务器版本备份数量。",
+            "env_variable": "SERVER_BACKUP_RETENTION",
+            "default_value": "2",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "integer|required|min:1",
+            "field_type": "text"
+        },
+        {
+            "name": "备份目录",
+            "description": "世界备份的目录。",
+            "env_variable": "BACKUP_DIR",
+            "default_value": "Backups",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "备份频率",
+            "description": "备份间隔（分钟）",
+            "env_variable": "BACKUP_FREQUENCY",
+            "default_value": "30",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "integer|required",
+            "field_type": "text"
+        },
+        {
+            "name": "备份最大数量",
+            "description": "世界备份的最大数量。",
+            "env_variable": "BACKUP_MAX_COUNT",
+            "default_value": "5",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "integer",
+            "field_type": "text"
+        },
+        {
+            "name": "备份存档最大数量",
+            "description": "要保留的最大备份存档数量。",
+            "env_variable": "BACKUP_ARCHIVE_MAX_COUNT",
+            "default_value": "5",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "integer",
+            "field_type": "text"
+        },
+        {
+            "name": "使用AOT缓存",
+            "description": "启用预编译缓存以加快启动速度。",
+            "env_variable": "USE_AOT_CACHE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "紧凑对象标题",
+            "description": "启用JVM紧凑对象头以减少内存使用。",
+            "env_variable": "USE_COMPACT_HEADERS",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "允许自OP",
+            "description": "允许玩家使用 /op self 命令为自己授予管理员权限。",
+            "env_variable": "ALLOW_OP",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "加载早期插件",
+            "description": "为服务器加载二进制注入插件，仅在你了解稳定性风险时启用。",
+            "env_variable": "ACCEPT_EARLY_PLUGINS",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "禁用 Sentry",
+            "description": "禁用 Sentry 错误报告和遥测。",
+            "env_variable": "DISABLE_SENTRY",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "忽略损坏的模组",
+            "description": "忽略损坏的模组，允许服务器在模组加载失败时仍能启动。",
+            "env_variable": "IGNORE_BROKEN_MODS",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "运输",
+            "description": "网络传输协议。QUIC (UDP) 为默认选项；如果 UDP/QUIC 被您的主机或网络屏蔽，请使用 TCP。",
+            "env_variable": "TRANSPORT",
+            "default_value": "QUIC",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:QUIC,TCP",
+            "field_type": "text"
+        },
+        {
+            "name": "配置文件 UUID",
+            "description": "为服务器会话指定一个特定的Hytale配置文件UUID。",
+            "env_variable": "HYTALE_PROFILE_UUID",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/227"
+}

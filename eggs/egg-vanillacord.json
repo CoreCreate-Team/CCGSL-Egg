@@ -1,0 +1,62 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "update_url": "https://eggs.pterodactyl.top/eggs/186/download/egg-vanillacord.json",
+        "version": "PTDL_v2"
+    },
+    "exported_at": "2026-08-23T08:16:04+00:00",
+    "name": "VanillaCord",
+    "author": "support@pterodactyl.io",
+    "description": "我的世界是一款关于放置方块和展开冒险的游戏。探索随机生成的世界，从最简单的房屋到最宏伟的城堡，建造令人惊叹的建筑。在创造模式中利用无限资源尽情建造，或在生存模式中深入挖掘，制作武器和盔甲抵御危险的生物。你可以独自游玩，也可以与朋友一起。\n\nVanillaCord 增加了对 BungeeCord 的 ip_forward 设置的支持。",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "Java 8": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_8",
+        "Java 11": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_11",
+        "Java 16": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_16",
+        "Java 17": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_17",
+        "Java 21": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_21",
+        "Java 25": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/yolks:java_25"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-ip\": \"0.0.0.0\",\r\n            \"enable-query\": \"true\",\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"query.port\": \"{{server.build.default.port}}\"\r\n        }\r\n    }\r\n}",
+        "logs": "{}",
+        "startup": "{\r\n    \"done\": \")! For help, type \",\r\n    \"userInteraction\": [\r\n        \"Go to eula.txt for more info.\"\r\n    ]\r\n}",
+        "stop": "stop"
+    },
+    "scripts": {
+        "installation": {
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:java_8",
+            "entrypoint": "ash",
+            "script": "#!/bin/ash\r\n\r\napk --no-cache --update add curl jq\r\n\r\ncd /mnt/server\r\n\r\necho $VANILLA_VERSION\r\n\r\nLATEST_VERSION=`curl https://launchermeta.mojang.com/mc/game/version_manifest.json | jq -r '.latest.release'`\r\n\r\nif { [ -z \"$VANILLA_VERSION\" ] || [ \"$VANILLA_VERSION\" == \"latest\" ]; } then\r\n  INSTALLING_VERSION=$LATEST_VERSION\r\nelse\r\n  INSTALLING_VERSION=$VANILLA_VERSION\r\nfi\r\n\r\nMAJOR_VERSION=$(echo $INSTALLING_VERSION | sed -En 's/^([0-9]*)\\.[0-9]*\\.[0-9]*$/\\1/p')\r\nMINOR_VERSION=$(echo $INSTALLING_VERSION | sed -En 's/^[0-9]*\\.([0-9]*)\\.[0-9]*$/\\1/p')\r\nPATCH_VERSION=$(echo $INSTALLING_VERSION | sed -En 's/^[0-9]*\\.[0-9]*\\.([0-9]*)$/\\1/p')\r\n\r\nVANILLACORD_URL=https://src.me1312.net/jenkins/job/VanillaCord/job/1.12/lastSuccessfulBuild/artifact/artifacts/VanillaCord.jar\r\nif [ $MAJOR_VERSION -eq 1 ] && [ $MINOR_VERSION -lt 12 ]; then\r\n  VANILLACORD_URL=https://src.me1312.net/jenkins/job/VanillaCord/job/1.7.10/lastSuccessfulBuild/artifact/artifacts/VanillaCord.jar\r\nfi\r\n\r\nif { [ $MAJOR_VERSION -eq 1 ] && [ $MINOR_VERSION -eq 7 ] && [ $PATCH_VERSION -lt 10 ]; } || { [ $MAJOR_VERSION -eq 1 ] && [ $MINOR_VERSION -lt 7 ]; } then\r\n  echo \"VanillaCord is only supported on Minecraft 1.7.10 or higher! You cannot use it with $INSTALLING_VERSION.\"\r\n  exit 1\r\nfi\r\n\r\ncurl -o vanillacord.jar $VANILLACORD_URL\r\njava -jar vanillacord.jar $INSTALLING_VERSION\r\n\r\nrm -f vanillacord.jar\r\nrm -rf in\r\nmv out/*.jar $SERVER_JARFILE\r\nrm -rf out"
+        }
+    },
+    "variables": [
+        {
+            "name": "服务器Jar文件",
+            "description": "用于运行服务器的服务器jar文件名。",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "server.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:/^([\\w\\d._-]+)(\\.jar)$/",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器版本",
+            "description": "要安装的Minecraft原版版本。使用\"latest\"安装最新版本。",
+            "env_variable": "VANILLA_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|between:3,15",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/186"
+}

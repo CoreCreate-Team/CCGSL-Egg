@@ -1,0 +1,176 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/142/download/egg-zombie-survival-game-online.json"
+    },
+    "exported_at": "2026-08-23T08:15:36+00:00",
+    "name": "Zombie Survival Game Online",
+    "author": "josdekurk@gmail.com",
+    "uuid": "6b6900fa-49fd-497b-982a-0cd3063adf76",
+    "description": "《僵尸生存游戏Online》是一款开放世界、后末日题材的掠夺射击游戏。我们致力于打造一个能持续多年带来乐趣的生存社区体验，凭借对这一类型的深厚热情以及多年磨练的开发技能。你能活下来吗？即刻书写你的生存故事！",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "Proton": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:proton"
+    },
+    "file_denylist": [],
+    "startup": "proton run  ZSGO/Binaries/Win64/ZSGOServer-Win64-Shipping.exe -server -log  -port={{SERVER_PORT}} -queryport={{QUERY_PORT}} -multihome=0.0.0.0 & ZSGO_PID=$!; sleep 1; tail -c0 -F  /home/container/ZSGO/Saved/Logs/ZSGO.log --pid=$ZSGO_PID",
+    "config": {
+        "files": "{\n    \"ZSGO/Content/DedicatedServer/ServerConfig.json\": {\n        \"parser\": \"json\",\n        \"find\": {\n            \"ServerName\": \"{{env.SERVER_NAME}}\",\n            \"WorldName\": \"{{env.WORLD_NAME}}\",\n            \"ServerPassword\": \"{{env.SERVER_PASSWORD}}\",\n            \"ServerMap\": \"{{env.SERVER_MAP}}\",\n            \"ValveAntiCheat\": \"{{env.ANTI_CHEAT}}\",\n            \"MaxPlayers\": \"{{env.MAX_PLAYERS}}\",\n            \"LAN\": \"{{env.LAN}}\",\n            \"AdvertiseServer\": \"{{env.ADVERTISE_SERVER}}\",\n            \"IsGSLTUsed\": \"{{env.USE_GSLT}}\",\n            \"SteamGSLT\": \"{{env.GSLT_TOKEN}}\"\n        }\n    }\n}",
+        "startup": "{\n    \"done\": \"IpNetDriver listening on port\"\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n# Image to install with is 'registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian'\r\n\r\n\r\n## just in case someone removed the defaults.\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd /tmp\r\nmkdir -p /mnt/server/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steamcmd\r\nmkdir -p /mnt/server/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd /mnt/server/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root /mnt\r\nexport HOME=/mnt/server\r\n\r\n## install game using steamcmd\r\n./steamcmd.sh +force_install_dir /mnt/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) ${INSTALL_FLAGS} validate +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n\r\n./steamcmd.sh +force_install_dir /mnt/server/ZSGO/Binaries/Win64/ +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update 1007 +quit\r\n\r\n## set up 32 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk32\r\ncp -v linux32/steamclient.so ../.steam/sdk32/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk64\r\ncp -v linux64/steamclient.so ../.steam/sdk64/steamclient.so\r\n\r\n## add below your custom commands if needed\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "应用ID",
+            "description": "",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "2536350",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:2536350",
+            "field_type": "text"
+        },
+        {
+            "name": "Windows 安装程序",
+            "description": "",
+            "env_variable": "WINDOWS_INSTALL",
+            "default_value": "1",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "自动更新",
+            "description": "启动时自动更新服务器",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "查询端口",
+            "description": "",
+            "env_variable": "QUERY_PORT",
+            "default_value": "27015",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器名称",
+            "description": "更改服务器列表中显示的服务器名称。",
+            "env_variable": "SERVER_NAME",
+            "default_value": "Default ZSGO Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|min:5|max:128",
+            "field_type": "text"
+        },
+        {
+            "name": "世界名称",
+            "description": "更改世界名称，该名称会在服务器列表中显示（目前此功能无效）。",
+            "env_variable": "WORLD_NAME",
+            "default_value": "Zombie Survival Game Online",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|min:5|max:128",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器密码",
+            "description": "设置您的服务器密码。若要使服务器成为公开的无密码服务器，此字段必须填写为“NoConfiguredPassword”。",
+            "env_variable": "SERVER_PASSWORD",
+            "default_value": "NoConiguredPassword",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|alpha_dash|max:128",
+            "field_type": "text"
+        },
+        {
+            "name": "反作弊",
+            "description": "真或假。为您的服务器启用VAC保护。",
+            "env_variable": "ANTI_CHEAT",
+            "default_value": "true",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "默认值为4。最高可设置为32（我们建议最大值为20，但您可以设置更高。风险自负！）。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "4",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|between:1,32",
+            "field_type": "text"
+        },
+        {
+            "name": "局域网",
+            "description": "设置服务器是否仅在局域网服务器列表中可见。",
+            "env_variable": "LAN",
+            "default_value": "false",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "宣传服务器",
+            "description": "真或假。设置服务器是否会在任何服务器列表中显示。如果你想要一个公开、无密码的服务器，但要求通过IP地址加入，这个选项会很有用。",
+            "env_variable": "ADVERTISE_SERVER",
+            "default_value": "true",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器地图",
+            "description": "服务器的地图",
+            "env_variable": "SERVER_MAP",
+            "default_value": "MainLevel",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "使用GSLT",
+            "description": "如果你想使用Steam GSLT令牌。",
+            "env_variable": "USE_GSLT",
+            "default_value": "false",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:false,true",
+            "field_type": "text"
+        },
+        {
+            "name": "GSLT 令牌",
+            "description": "Steam GSLT 令牌，为此必须将“使用 GSLT”设置为 true。",
+            "env_variable": "GSLT_TOKEN",
+            "default_value": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/142"
+}

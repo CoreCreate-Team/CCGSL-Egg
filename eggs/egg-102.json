@@ -1,0 +1,125 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/102/download/egg-satisfactory.json"
+    },
+    "exported_at": "2026-08-23T08:15:44+00:00",
+    "name": "Satisfactory",
+    "author": "red_thirten@yahoo.com",
+    "description": "《幸福工厂》是一款第一人称开放世界工厂建造游戏，融合了探索与战斗元素。你可以独自或与朋友一起游玩，探索外星行星，建造多层工厂，进入传送带的天堂！",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:debian": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:debian"
+    },
+    "file_denylist": [],
+    "startup": "./Engine/Binaries/Linux/*-Linux-Shipping FactoryGame -Port={{SERVER_PORT}} -ReliablePort={{RELIABLE_PORT}}",
+    "config": {
+        "files": "{\r\n    \"FactoryGame/Saved/Config/LinuxServer/Game.ini\": {\r\n        \"parser\": \"ini\",\r\n        \"find\": {\r\n            \"[/Script/Engine.GameSession].MaxPlayers\": \"{{server.build.env.MAX_PLAYERS}}\"\r\n        }\r\n    },\r\n    \"FactoryGame/Saved/Config/LinuxServer/Engine.ini\": {\r\n        \"parser\": \"ini\",\r\n        \"find\": {\r\n            \"[/Script/FactoryGame.FGSaveSession].mNumRotatingAutosaves\": \"{{server.build.env.NUM_AUTOSAVES}}\",\r\n            \"[/Script/OnlineSubsystemUtils.IpNetDriver].InitialConnectTimeout\": \"{{server.build.env.INIT_CONNECT_TIMEOUT}}\",\r\n            \"[/Script/OnlineSubsystemUtils.IpNetDriver].ConnectionTimeout\": \"{{server.build.env.CONNECT_TIMEOUT}}\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"Engine Initialization\"\r\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\n\r\n# File: Pterodactyl Satisfactory Egg - egg-satisfactory.json\r\n# Authors: Red-Thirten, Kubi, matthewp, Software-Noob, and Zarklord\r\n# Date: 2024/09/10\r\n# License: MIT License\r\n\r\n## Download and install SteamCMD\r\ncd /tmp\r\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\r\nmkdir -p /mnt/server/steamcmd\r\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steamcmd\r\ncd /mnt/server/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\nchown -R root:root /mnt\r\nexport HOME=/mnt/server\r\n\r\n# Install game server using SteamCMD\r\n./steamcmd.sh +force_install_dir /mnt/server +login anonymous +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) validate +exit\r\n\r\n# Set up 32 and 64 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk{32,64}\r\ncp -v linux32/steamclient.so /mnt/server/.steam/sdk32/steamclient.so\r\ncp -v linux64/steamclient.so /mnt/server/.steam/sdk64/steamclient.so\r\n\r\n## Satisfactory setup\r\n# Check for successful installation and make the server binary executable.\r\n# Use `find` to see if a valid server binary exists using a wildcard, because\r\n# the binary name may change in the future.\r\n# (eg. it changed when the engine was updated from UE4 to UE5)\r\ncd /mnt/server/Engine/Binaries/Linux\r\ncount=$(find . -maxdepth 1 -name '*-Linux-Shipping' -type f -executable | wc -l)\r\nif [[ $count -eq 0 ]]; then\r\n    echo -e \"\\n\\nSteamCMD failed to install the Satisfactory Dedicated Server!\"\r\n    echo -e \"\\tTry reinstalling the server again.\\n\"\r\n    exit 1\r\nelse\r\n    chmod +x *-Linux-Shipping\r\nfi\r\n\r\necho -e \"\\nSatisfactory Dedicated Server successfully installed!\\n\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "/bin/bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "[主机] 可靠消息传递端口",
+            "description": "此端口用于客户端与服务器之间的初始握手。连接时，客户端应连接到服务器的主端口，而非此端口。",
+            "env_variable": "RELIABLE_PORT",
+            "default_value": "8888",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|integer|min:0|max:65535",
+            "field_type": "text"
+        },
+        {
+            "name": "自动更新",
+            "description": "启动时快速检查服务器更新，并在必要时进行更新。（1 启用 | 0 禁用）",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "轮换自动存档数量",
+            "description": "服务器在删除最旧的存档并将其他存档下移之前保留的自动保存会话数量。",
+            "env_variable": "NUM_AUTOSAVES",
+            "default_value": "3",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:0",
+            "field_type": "text"
+        },
+        {
+            "name": "[实验性] 最大玩家数",
+            "description": "服务器和客户端目前未针对支持超过4名玩家进行优化。不过，您可以在此处覆盖此值，但需自行承担性能不佳的风险。",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "4",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:1",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 客户端初始连接超时",
+            "description": "等待新客户端连接建立前销毁连接的超时时间（秒）。",
+            "env_variable": "INIT_CONNECT_TIMEOUT",
+            "default_value": "30",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|min:1",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 客户端已建立连接超时",
+            "description": "等待已建立的客户端连接超时的时间（秒）。通常比初始连接等待时间短，因为此连接应已建立，任何中断都应更快被捕获。",
+            "env_variable": "CONNECT_TIMEOUT",
+            "default_value": "20",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|min:1",
+            "field_type": "text"
+        },
+        {
+            "name": "[高级] 分支名称",
+            "description": "[可接受值：\"public\"、\"experimental\"，或留空以使用服务器的主分支] 用于下载或切换到游戏服务器的非主分支。若服务器已安装，则必须将\"自动更新\"和\"验证服务器文件\"设置为\"1\"才能切换分支。注意：任何非主分支可能不完全兼容/稳定！",
+            "env_variable": "SRCDS_BETAID",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "string|nullable|in:public,experimental",
+            "field_type": "text"
+        },
+        {
+            "name": "[修复] 验证服务器文件",
+            "description": "留空（无值）表示关闭，或输入 \"true\" 或 \"1\" 表示开启。当自动更新启用时，验证所有服务器文件。注意：这将显著增加服务器启动时间，因此建议仅在需要时启用此功能。",
+            "env_variable": "VALIDATE",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "string|nullable",
+            "field_type": "text"
+        },
+        {
+            "name": "[系统] 满意工厂 专用服务器 应用ID",
+            "description": "用于安装和更新的Steam应用ID。",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "1690800",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|integer|in:1690800",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/102"
+}
