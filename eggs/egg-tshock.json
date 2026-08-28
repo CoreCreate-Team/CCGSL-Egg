@@ -21,6 +21,11 @@
         "logs": "{}",
         "stop": "exit"
     },
+    "ccgsl":     {
+        "appid": "105600",
+        "download_url": "https://github.com/Pryaxis/TShock/releases/download/v6.1.0/TShock-6.1.0-for-Terraria-1.4.5.6-win-x64-Release.zip",
+        "expected": "TShock.Server.exe"
+    },
     "scripts": {
         "installation": {
             "script": "#!/bin/bash\n# Vanilla tModloader Installation Script\n#\n# Server Files: /mnt/server\n## install packages to get version and download links\n\n## get release info and download links\nLATEST_JSON=$(curl --silent \"https://api.github.com/repos/Pryaxis/TShock/releases/latest\")\nRELEASES=$(curl --silent \"https://api.github.com/repos/Pryaxis/TShock/releases\")\nMATCH=$([[ \"$(uname -m)\" == \"x86_64\" ]] && echo \"linux-x64\" || echo \"linux-arm64\")\n\necho ${MATCH}\n\nif [ -z \"$TSHOCK_VERSION\" ] || [ \"$TSHOCK_VERSION\" == \"latest\" ]; then\n    DOWNLOAD_LINK=$(echo $LATEST_JSON | jq .assets | jq -r .[].browser_download_url | grep -i ${MATCH} | head -1 )\nelse\n    VERSION_CHECK=$(echo $RELEASES | jq -r --arg VERSION \"$TSHOCK_VERSION\" '.[] | select(.tag_name==$VERSION) | .tag_name')\n    if [ \"$TSHOCK_VERSION\" == \"$VERSION_CHECK\" ]; then\n        DOWNLOAD_LINK=$(echo $RELEASES | jq -r --arg VERSION \"$TSHOCK_VERSION\" '.[] | select(.tag_name==$VERSION) | .assets[].browser_download_url' |  grep -i ${MATCH} | head -1 )\n    else\n        echo -e \"defaulting to latest release\"\n        DOWNLOAD_LINK=$(echo $LATEST_JSON | jq .assets | jq -r .[].browser_download_url | grep -i ${MATCH} | head -1)\n    fi\nfi\n\n## mkdir and cd to /mnt/server/\nmkdir -p /mnt/server\n\ncd /mnt/server\n\n## download release\necho -e \"running: wget $DOWNLOAD_LINK\"\ncurl -sSL $DOWNLOAD_LINK -o TShock.zip\n\nunzip -o TShock.zip\n\ntar xvf TShock-*.tar\n\nrm TShock.zip TShock-*.tar\n\nchmod +x TShock.Server\n\necho -e \"install complete\"",
@@ -29,6 +34,16 @@
         }
     },
     "variables": [
+        {
+            "name": "服务器端口",
+            "description": "游戏连接端口（默认 7777）。修改后请同步修改 serverconfig.txt 中的 port。",
+            "env_variable": "SERVER_PORT",
+            "default_value": "7777",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|max:65535",
+            "field_type": "text"
+        },
         {
             "name": "最大玩家数",
             "description": "服务器能容纳的最大玩家数量。",

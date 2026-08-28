@@ -1,7 +1,7 @@
 {
     "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
     "meta": {
-        "update_url": "https://eggs.pterodactyl.top/eggs/252/download/egg-terraria-vanilla.json",
+        "update_url": "https://eggs.pterodactyl.top/eggs/252/download/egg-terraria.json",
         "version": "PTDL_v2"
     },
     "exported_at": "2026-08-23T08:16:14+00:00",
@@ -20,6 +20,12 @@
         "startup": "{\r\n    \"done\": \"Type 'help' for a list of commands\"\r\n}",
         "stop": "exit"
     },
+    "ccgsl":     {
+        "appid": "105600",
+        "download_url": "https://terraria.org/api/download/pc-dedicated-server/terraria-server-1458.zip",
+        "flatten_suffix": "Windows",
+        "expected": "TerrariaServer.exe"
+    },
     "scripts": {
         "installation": {
             "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
@@ -28,6 +34,16 @@
         }
     },
     "variables": [
+        {
+            "name": "服务器端口",
+            "description": "游戏连接端口（默认 7777）。修改后请同步修改 serverconfig.txt 中的 port。",
+            "env_variable": "SERVER_PORT",
+            "default_value": "7777",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|max:65535",
+            "field_type": "text"
+        },
         {
             "name": "泰拉瑞亚版本",
             "description": "要使用的泰拉瑞亚版本。\n\n您可以使用完整版本号或文件编号。（例如 1.3.5.3 或 1353）\n\n在此处获取版本号 - https://terraria.wiki.gg/wiki/Server#Downloads",
