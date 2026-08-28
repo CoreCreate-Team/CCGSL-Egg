@@ -2,12 +2,12 @@
     "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
     "meta": {
         "version": "PTDL_v2",
-        "update_url": "https://eggs.pterodactyl.top/eggs/86/download/egg-palworld-proton.json"
+        "update_url": "https://eggs.pterodactyl.top/eggs/278/download/egg-palworld-proton.json"
     },
-    "exported_at": "2026-08-23T08:15:40+00:00",
+    "exported_at": "2026-08-28T09:29:25+00:00",
     "name": "Palworld Proton",
     "author": "josdekurk@gmail.com",
-    "description": "在这款全新的多人开放世界生存与制作游戏中，与被称为“帕鲁”的神秘生物一同战斗、耕种、建造和工作吧！",
+    "description": "在这款全新的多人开放世界生存与建造游戏中，与名为“帕鲁”的神秘生物一起战斗、耕种、建造和工作！",
     "features": [
         "steam_disk_space"
     ],
@@ -72,7 +72,7 @@
         },
         {
             "name": "服务器密码",
-            "description": "如果指定，玩家必须提供此密码才能加入服务器。",
+            "description": "如果指定了，玩家必须提供此密码才能加入服务器。",
             "env_variable": "SERVER_PASSWORD",
             "default_value": "",
             "user_viewable": true,
@@ -82,7 +82,7 @@
         },
         {
             "name": "管理员密码",
-            "description": "如果指定，玩家必须提供此密码（通过游戏内聊天或RCON）才能获得服务器上的管理员命令权限。",
+            "description": "如果指定，玩家必须提供此密码（通过游戏内聊天或RCON）以获得服务器上的管理员命令访问权限。",
             "env_variable": "ADMIN_PASSWORD",
             "default_value": "",
             "user_viewable": true,
@@ -92,7 +92,7 @@
         },
         {
             "name": "公网IP",
-            "description": "将此设置为服务器的公网IP地址。  \n仅当分配的是本地IP时需要，否则将自动使用分配的IP。",
+            "description": "将此设置为服务器的公共IP地址。仅在分配为本地IP时需要，否则将自动使用分配的IP。",
             "env_variable": "PUBLIC_IP",
             "default_value": "",
             "user_viewable": true,
@@ -101,7 +101,7 @@
             "field_type": "text"
         },
         {
-            "name": "RCON 端口",
+            "name": "RCON端口",
             "description": "无需分配！",
             "env_variable": "RCON_PORT",
             "default_value": "25575",
@@ -131,7 +131,7 @@
             "field_type": "text"
         },
         {
-            "name": "WINDOWS_INSTALL",
+            "name": "Windows安装",
             "description": "",
             "env_variable": "WINDOWS_INSTALL",
             "default_value": "1",
@@ -141,15 +141,15 @@
             "field_type": "text"
         },
         {
-            "name": "连接平台",
-            "description": "玩家将能够从该平台连接。",
-            "env_variable": "ALLOW_CONNECT_PLATFORM",
-            "default_value": "Steam",
+            "name": "跨平台联机",
+            "description": "允许连接的平台列表，以逗号分隔。有效值：Steam, Xbox, PS5, Mac。示例：Steam,Xbox,PS5,Mac",
+            "env_variable": "CROSSPLAY_PLATFORMS",
+            "default_value": "Steam,Xbox,PS5,Mac",
             "user_viewable": true,
             "user_editable": true,
-            "rules": "required|string|in:Steam,Xbox",
+            "rules": "nullable|string",
             "field_type": "text"
         }
     ],
-    "source": "https://eggs.pterodactyl.top/eggs/86"
+    "source": "https://eggs.pterodactyl.top/eggs/278"
 }

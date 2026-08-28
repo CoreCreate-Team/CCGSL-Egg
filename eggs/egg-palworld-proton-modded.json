@@ -1,0 +1,185 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://eggs.pterodactyl.top/eggs/279/download/egg-palworld-proton-modded.json"
+    },
+    "exported_at": "2026-08-28T09:29:27+00:00",
+    "name": "Palworld Proton Modded",
+    "author": "noreply@kozejin.dev",
+    "description": "在这款全新的多人开放世界生存与建造游戏中，与名为“帕鲁”的神秘生物一起战斗、耕种、建造和工作！",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "Proton": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/steamcmd:proton"
+    },
+    "file_denylist": [],
+    "startup": "./PalworldServerConfigParser; export RESTAPI_PORT={{REST_API_PORT}} ADMIN_PASSWORD={{ADMIN_PASSWORD}} WINEDLLOVERRIDES=\"dwmapi=n,b\"; (while read cmd; do ./palcon \"$cmd\"; done) < /dev/stdin & cd /home/container/Pal/Binaries/Win64 && proton run ./PalServer-Win64-Shipping.exe -publiclobby -useperfthreads -NoAsyncLoadingThread -UseMultithreadForDS -port={{SERVER_PORT}} -publicport={{SERVER_PORT}} -servername=\"{{SERVER_NAME}}\" -players={{MAX_PLAYERS}} $(if [ -n \"$SERVER_PASSWORD\" ]; then echo \"-serverpassword=\\\"${SERVER_PASSWORD}\\\"\"; fi) -adminpassword=\"{{ADMIN_PASSWORD}}\" -rcon {{ENABLE_GAMEDATA}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"up and running.\"\r\n}",
+        "logs": "{}",
+        "stop": "shutdown 10 \"Server restarting in 10 seconds.\""
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: /mnt/server\r\n# Image to install with is 'registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian'\r\n\r\n\r\n# Install packages. Default packages below are not required if using our existing install image thus speeding up the install process.\r\n#apt -y update\r\n#apt -y --no-install-recommends install curl lib32gcc-s1 ca-certificates\r\n\r\n## just in case someone removed the defaults.\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd /tmp\r\nmkdir -p /mnt/server/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steamcmd\r\nmkdir -p /mnt/server/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd /mnt/server/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root /mnt\r\nexport HOME=/mnt/server\r\n\r\n## install game using steamcmd\r\n./steamcmd.sh +force_install_dir /mnt/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) ${INSTALL_FLAGS} validate +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n\r\n## set up 32 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk32\r\ncp -v linux32/steamclient.so ../.steam/sdk32/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p /mnt/server/.steam/sdk64\r\ncp -v linux64/steamclient.so ../.steam/sdk64/steamclient.so\r\n\r\n## add below your custom commands if needed\r\n## copy template config file\r\necho \"Copy template config file into config folder!\"\r\n\r\nif [ -f \"/mnt/server/Pal/Saved/Config/WindowsServer/PalWorldSettings.ini\" ]; then\r\n    echo \"Config file already exitis, backing up and overwriting with a new one\"\r\n    mv /mnt/server/Pal/Saved/Config/WindowsServer/PalWorldSettings.ini /mnt/server/Pal/Saved/Config/WindowsServer/PalWorldSettings_$(date +\"%Y%m%d%H%M%S\").ini\r\n    cp /mnt/server/DefaultPalWorldSettings.ini /mnt/server/Pal/Saved/Config/WindowsServer/PalWorldSettings.ini\r\nelse \r\n    echo \"Creating new config file\"\r\n    mkdir -p /mnt/server/Pal/Saved/Config/WindowsServer\r\n    cp /mnt/server/DefaultPalWorldSettings.ini /mnt/server/Pal/Saved/Config/WindowsServer/PalWorldSettings.ini\r\nfi\r\n\r\ncd /mnt/server\r\n# Download self made replace tool\r\necho \"Downloading config parser aplication\"\r\ncurl -sSL -o PalworldServerConfigParser https://github.com/pelican-eggs/Palworld-Config-Parser-Tool/releases/latest/download/PalworldServerConfigParser-linux-amd64\r\nchmod +x PalworldServerConfigParser\r\n\r\ncd /mnt/server\r\necho \"Downloading palcon cli tool for RESTAPI\"\r\ncurl -sSL -o palcon https://github.com/dkoz/palcon/releases/download/v1.0.1/palcon\r\nchmod +x palcon\r\n\r\ncd /tmp\r\ncurl -sSL -o /mnt/server/Pal/Binaries/Win64/winmm.dll https://raw.githubusercontent.com/pelican-eggs/games-steamcmd/main/palworld/winmm.dll\r\n\r\nsync\r\nsleep 2\r\n\r\n# Okaetsu UE4SS Installation\r\nLATEST_JSON=$(curl -fsSL \"https://api.github.com/repos/Okaetsu/RE-UE4SS/releases/latest\")\r\nMATCH=\"UE4SS-Palworld.zip\"\r\nDOWNLOAD_URL=$(echo \"${LATEST_JSON}\"|jq -r '.assets[]|select(.name==\"'\"${MATCH}\"'\")|.browser_download_url')\r\necho \"${DOWNLOAD_URL}\"\r\ncurl -fsSL -o ue4ss.zip \"${DOWNLOAD_URL}\"\r\nunzip -o ue4ss.zip -d /mnt/server/Pal/Binaries/Win64\r\n\r\n# Zvend PalDefender Installation\r\nif [[ \"${INSTALL_PALDEFENDER}\" == \"True\" ]]; then\r\n    LATEST_JSON=$(curl --silent \"https://api.github.com/repos/Ultimeit/PalDefender/releases/latest\")\r\n    MATCH=\"PalDefender.zip\"\r\n\r\n    DOWNLOAD_URL=$(echo \"${LATEST_JSON}\" | jq .assets | jq -r '.[].browser_download_url' | grep -i \"${MATCH}\")\r\n    echo \"${DOWNLOAD_URL}\"\r\n\r\n    curl -sSL -o paldefender.zip \"${DOWNLOAD_URL}\"\r\n    unzip -o paldefender.zip -d /mnt/server/Pal/Binaries/Win64\r\nfi\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "registry.cn-shanghai.aliyuncs.com/pterodactyl-images/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "应用ID",
+            "description": "不要编辑！",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "2394010",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:2394010",
+            "field_type": "text"
+        },
+        {
+            "name": "自动更新",
+            "description": "启动时自动更新服务器。",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "最大玩家数",
+            "description": "",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "32",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|between:1,100",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器名称",
+            "description": "",
+            "env_variable": "SERVER_NAME",
+            "default_value": "A Pterodactyl hosted Palworld Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:64",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器密码",
+            "description": "如果指定了，玩家必须提供此密码才能加入服务器。",
+            "env_variable": "SERVER_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|alpha_dash|between:1,30",
+            "field_type": "text"
+        },
+        {
+            "name": "管理员密码",
+            "description": "如果指定，玩家必须提供此密码（通过游戏内聊天或RCON）以获得服务器上的管理员命令访问权限。",
+            "env_variable": "ADMIN_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|alpha_dash|between:1,30",
+            "field_type": "text"
+        },
+        {
+            "name": "公网IP",
+            "description": "将此设置为服务器的公共IP地址。仅在分配为本地IP时需要，否则将自动使用分配的IP。",
+            "env_variable": "PUBLIC_IP",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "RCON端口",
+            "description": "无需分配！",
+            "env_variable": "RCON_PORT",
+            "default_value": "25575",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric",
+            "field_type": "text"
+        },
+        {
+            "name": "启用RCON",
+            "description": "必须开启",
+            "env_variable": "RCON_ENABLE",
+            "default_value": "False",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:True,False",
+            "field_type": "text"
+        },
+        {
+            "name": "服务器描述",
+            "description": "服务器的描述。",
+            "env_variable": "SERVER_DESCRIPTION",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:128",
+            "field_type": "text"
+        },
+        {
+            "name": "Windows安装",
+            "description": "",
+            "env_variable": "WINDOWS_INSTALL",
+            "default_value": "1",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|in:1",
+            "field_type": "text"
+        },
+        {
+            "name": "启用RESTAPI",
+            "description": "",
+            "env_variable": "REST_API_ENABLED",
+            "default_value": "True",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:True",
+            "field_type": "text"
+        },
+        {
+            "name": "RESTAPI 端口",
+            "description": "",
+            "env_variable": "REST_API_PORT",
+            "default_value": "8212",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric",
+            "field_type": "text"
+        },
+        {
+            "name": "安装 PalDefender",
+            "description": "安装PalDefender反作弊",
+            "env_variable": "INSTALL_PALDEFENDER",
+            "default_value": "False",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:True,False",
+            "field_type": "text"
+        },
+        {
+            "name": "启用 GameData API",
+            "description": "",
+            "env_variable": "ENABLE_GAMEDATA",
+            "default_value": "-enable-gamedata-api -collect-gamedata-interval=60",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "nullable|string|max:1024",
+            "field_type": "text"
+        }
+    ],
+    "source": "https://eggs.pterodactyl.top/eggs/279"
+}
