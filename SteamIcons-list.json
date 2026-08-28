@@ -28,6 +28,7 @@
                   "egg-87.jpg",
                   "egg-90.jpg",
                   "egg-ark.jpg",
+                  "egg-ark_survival_evolved.jpg",
                   "egg-arma-3.jpg",
                   "egg-arma-reforger.jpg",
                   "egg-assetto-corsa.jpg",
@@ -51,6 +52,7 @@
                   "egg-fof.jpg",
                   "egg-foundry.jpg",
                   "egg-ground-branch.jpg",
+                  "egg-left_4_dead_2.jpg",
                   "egg-live.jpg",
                   "egg-nova-life-amboise.jpg",
                   "egg-onset.jpg",
@@ -77,10 +79,13 @@
                   "egg-starrupture.jpg",
                   "egg-stationeers-bepinex.jpg",
                   "egg-stormworks.jpg",
+                  "egg-subnautica.jpg",
                   "egg-sven-co-op.jpg",
+                  "egg-terraria.jpg",
                   "egg-terratech-worlds.jpg",
                   "egg-the-front.jpg",
                   "egg-the-isle.jpg",
-                  "egg-tower-unite.jpg"
+                  "egg-tower-unite.jpg",
+                  "egg-valheim.jpg"
               ]
 }
